@@ -55,11 +55,11 @@ TEMP_DIR = ROOT / "bg_temp"
 
 def download_translation(abbrev):
     """Download all books for a translation and convert to scrollmapper JSON."""
-    print(f"\n📖 Downloading {abbrev}...")
+    print(f"\nDownloading {abbrev}...")
 
     output_file = SOURCES_DIR / f"{abbrev}.json"
     if output_file.exists():
-        print(f"  ⏭ {abbrev}.json already exists, skipping")
+        print(f"  {abbrev}.json already exists, skipping")
         return True
 
     temp_path = TEMP_DIR / abbrev
@@ -80,16 +80,16 @@ def download_translation(abbrev):
 
         try:
             downloader.download_book(book, str(book_file))
-            with open(book_file) as f:
+            with open(book_file, encoding='utf-8') as f:
                 data = json.load(f)
                 if "Info" in data:
                     del data["Info"]
                 combined.update(data)
         except Exception as e:
-            print(f"\n  ⚠ Failed to download {book}: {e}")
+            print(f"\n  Failed to download {book}: {e}")
             continue
 
-    print(f"\r  ✓ Downloaded {len(combined)} books" + " " * 30)
+    print(f"\r  Downloaded {len(combined)} books" + " " * 30)
 
     # Convert to scrollmapper format
     scrollmapper = {
@@ -107,7 +107,7 @@ def download_translation(abbrev):
             if book_name in BOOK_NAME_MAP:
                 bg_name = BOOK_NAME_MAP[book_name]
             if bg_name not in combined:
-                print(f"  ⚠ Book '{book_name}' not found in download")
+                print(f"  Book '{book_name}' not found in download")
                 continue
 
         chapters_data = combined[bg_name]
@@ -129,7 +129,7 @@ def download_translation(abbrev):
         })
 
     # Write output
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding='utf-8') as f:
         json.dump(scrollmapper, f, indent=2)
 
     size_mb = output_file.stat().st_size / 1024 / 1024
@@ -138,7 +138,7 @@ def download_translation(abbrev):
         for book in scrollmapper["books"]
         for ch in book["chapters"]
     )
-    print(f"  ✓ Saved {output_file.name} ({size_mb:.1f} MB, {verse_count} verses)")
+    print(f"  Saved {output_file.name} ({size_mb:.1f} MB, {verse_count} verses)")
     return True
 
 
@@ -153,9 +153,9 @@ def main():
         try:
             download_translation(abbrev)
         except Exception as e:
-            print(f"\n  ❌ {abbrev} failed: {e}")
+            print(f"\n  {abbrev} failed: {e}")
 
-    print(f"\n✅ Done! Check {SOURCES_DIR} for output files.\n")
+    print(f"\nDone! Check {SOURCES_DIR} for output files.\n")
 
 
 if __name__ == "__main__":
