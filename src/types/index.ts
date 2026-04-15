@@ -4,6 +4,7 @@ export type {
   TranscriptSegment,
   TranscriptEventPayload,
 } from "./transcript"
+export type { Hymn } from "./hymn"
 export type { Translation, Book, Verse, CrossReference } from "./bible"
 export type { QueueItem } from "./queue"
 export type { DetectionResult, DetectionStatus, SemanticSearchResult } from "./detection"

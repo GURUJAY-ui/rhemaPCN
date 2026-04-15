@@ -13,6 +13,7 @@ import {
 } from "@/stores"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
+import { useHymns } from "@/hooks/use-hymns"
 import { bibleActions } from "@/hooks/use-bible"
 import type { DetectionResult } from "@/types"
 
@@ -58,6 +59,7 @@ export function TranscriptPanel() {
     startTranscription,
     stopTranscription,
   } = useTranscription({ onMissingApiKey })
+  const { hymns, detectedHymn } = useHymns()
   const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -207,6 +209,35 @@ export function TranscriptPanel() {
             <p className="text-sm text-muted-foreground">
               Click "Start transcribing" to begin
             </p>
+          )}
+
+          {hymns.length > 0 && (
+            <div className="rounded-xl border border-border bg-slate-950/10 p-3 text-sm text-foreground/80">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Hymn library
+                </p>
+                <p className="font-medium text-foreground">
+                  {hymns.length} hymns available.
+                </p>
+                {detectedHymn ? (
+                  <div className="space-y-2 pt-2">
+                    <p className="font-semibold text-foreground">
+                      Detected hymn: {detectedHymn.titleWithHymnNumber}
+                    </p>
+                    {detectedHymn.chorus ? (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {detectedHymn.chorus}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Sing a hymn and the app will try to match it to the loaded hymn library.
+                  </p>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Final segments — recent ones brighter, older ones fade */}

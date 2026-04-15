@@ -44,6 +44,7 @@ pub fn run() {
             commands::detection::reading_mode_status,
             commands::detection::stop_reading_mode,
             commands::audio::get_audio_devices,
+            commands::hymns::get_hymns,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
             commands::broadcast::list_monitors,
