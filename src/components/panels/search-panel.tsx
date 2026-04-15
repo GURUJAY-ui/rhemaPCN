@@ -265,6 +265,7 @@ export function SearchPanel() {
     setContextQuery(query)
     if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
     if (query.length >= 5) {
+      invoke("load_semantic_model").catch(() => undefined)
       const translationId = useBibleStore.getState().activeTranslationId
       contextDebounceRef.current = setTimeout(() => {
         runContextSearch(query, translationId).catch(console.error)

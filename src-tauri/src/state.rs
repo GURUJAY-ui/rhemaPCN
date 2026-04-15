@@ -10,6 +10,7 @@ pub struct AppState {
     pub active_translation_id: i64,
     pub audio_active: Arc<AtomicBool>,
     pub stt_active: Arc<AtomicBool>,
+    pub semantic_loader_started: bool,
     #[expect(dead_code, reason = "reserved for future Deepgram key injection")]
     pub deepgram_api_key: Option<String>,
 }
@@ -22,6 +23,7 @@ impl AppState {
             active_translation_id: 1, // Default to first translation (KJV)
             audio_active: Arc::new(AtomicBool::new(false)),
             stt_active: Arc::new(AtomicBool::new(false)),
+            semantic_loader_started: false,
             deepgram_api_key: None,
         }
     }

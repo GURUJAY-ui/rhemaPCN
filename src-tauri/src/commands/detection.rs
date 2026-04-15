@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::sync::Mutex;
 
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use rhema_detection::{MergedDetection, ReadingMode};
 
@@ -148,6 +148,85 @@ pub struct SemanticSearchResult {
     pub chapter: i32,
     pub verse: i32,
     pub similarity: f64,
+}
+
+#[tauri::command]
+pub fn load_semantic_model(
+    state: State<'_, Mutex<AppState>>,
+    app_handle: AppHandle,
+) -> Result<bool, String> {
+    let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    if app_state.semantic_loader_started {
+        return Ok(true);
+    }
+    app_state.semantic_loader_started = true;
+    drop(app_state);
+
+    let app_handle_clone = app_handle.clone();
+    std::thread::Builder::new()
+        .name("semantic-loader".into())
+        .spawn(move || {
+            let base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+            let model_path = {
+                let int8 = base_dir.join("models/qwen3-embedding-0.6b-int8/model_quantized.onnx");
+                let fp32 = base_dir.join("models/qwen3-embedding-0.6b/model.onnx");
+                if int8.exists() {
+                    log::info!("Using INT8 quantized ONNX model");
+                    int8
+                } else if fp32.exists() {
+                    log::info!("Using FP32 ONNX model (INT8 not found)");
+                    fp32
+                } else {
+                    fp32
+                }
+            };
+            let tokenizer_path = base_dir.join("models/qwen3-embedding-0.6b/tokenizer.json");
+            let embeddings_path = base_dir.join("embeddings/kjv-qwen3-0.6b.bin");
+            let ids_path = base_dir.join("embeddings/kjv-qwen3-0.6b-ids.bin");
+
+            if model_path.exists() && tokenizer_path.exists() {
+                use rhema_detection::semantic::embedder::TextEmbedder;
+                use rhema_detection::semantic::index::VectorIndex;
+                match rhema_detection::OnnxEmbedder::load(&model_path, &tokenizer_path) {
+                    Ok(embedder) => {
+                        log::info!("ONNX embedding model loaded");
+                        let managed_state = app_handle_clone.state::<Mutex<AppState>>();
+                        let mut state = managed_state.lock().unwrap();
+
+                        if embeddings_path.exists() && ids_path.exists() {
+                            let dim = embedder.dimension();
+                            match rhema_detection::HnswVectorIndex::load(&embeddings_path, &ids_path, dim) {
+                                Ok(index) => {
+                                    log::info!("Verse embeddings loaded ({} vectors)", index.len());
+                                    state.detection_pipeline.set_semantic(
+                                        rhema_detection::SemanticDetector::new(
+                                            Box::new(embedder),
+                                            Box::new(index),
+                                        ),
+                                    );
+                                }
+                                Err(e) => {
+                                    log::warn!("Failed to load verse embeddings: {e}");
+                                }
+                            }
+                        } else {
+                            log::info!("No pre-computed verse embeddings found. Run 'bun run export:verses' then the precompute binary.");
+                        }
+
+                        drop(state);
+                        let _ = app_handle_clone.emit("semantic_ready", ());
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to load ONNX model: {e}");
+                    }
+                }
+            } else {
+                log::info!("ONNX model not found. Semantic search disabled. Run 'bun run download:model' to download.");
+            }
+        })
+        .map_err(|e| e.to_string())?;
+
+    Ok(true)
 }
 
 #[tauri::command]
