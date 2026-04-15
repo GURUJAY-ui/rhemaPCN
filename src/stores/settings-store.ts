@@ -55,7 +55,6 @@ const PERSISTED_KEYS = [
   "deepgramApiKey",
   "openaiApiKey",
   "claudeApiKey",
-  "activeTranslationId",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -89,7 +88,7 @@ export function hydrateSettings(): Promise<void> {
       for (const key of PERSISTED_KEYS) {
         const value = await store.get(key)
         if (value !== undefined && value !== null) {
-          ;(patch as Record<string, unknown>)[key] = value
+          ;(patch as Record<PersistedKey, unknown>)[key] = value
         }
       }
       if (Object.keys(patch).length > 0) {
