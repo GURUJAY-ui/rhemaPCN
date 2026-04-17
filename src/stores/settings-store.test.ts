@@ -37,6 +37,7 @@ describe("settings store", () => {
       if (key === "gain") return 2.5
       if (key === "sttProvider") return "whisper"
       if (key === "deepgramApiKey") return "dg-key"
+      if (key === "detectionMode") return "hymns"
       return null
     })
 

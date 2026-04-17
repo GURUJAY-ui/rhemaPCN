@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
 
 type SttProvider = "deepgram" | "whisper"
+type DetectionMode = "both" | "bible" | "hymns"
 
 interface SettingsState {
   deepgramApiKey: string | null
@@ -14,6 +15,7 @@ interface SettingsState {
   cooldownMs: number
   onboardingComplete: boolean
   sttProvider: SttProvider
+  detectionMode: DetectionMode
 
   setDeepgramApiKey: (key: string | null) => void
   setOpenaiApiKey: (key: string | null) => void
@@ -25,6 +27,7 @@ interface SettingsState {
   setCooldownMs: (ms: number) => void
   setOnboardingComplete: (complete: boolean) => void
   setSttProvider: (provider: SttProvider) => void
+  setDetectionMode: (mode: DetectionMode) => void
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -38,6 +41,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   cooldownMs: 2500,
   onboardingComplete: false,
   sttProvider: "deepgram",
+  detectionMode: "both",
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
@@ -49,6 +53,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCooldownMs: (cooldownMs) => set({ cooldownMs }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
   setSttProvider: (sttProvider) => set({ sttProvider }),
+  setDetectionMode: (detectionMode) => set({ detectionMode }),
 }))
 
 const PERSISTED_KEYS = [
@@ -62,6 +67,7 @@ const PERSISTED_KEYS = [
   "cooldownMs",
   "onboardingComplete",
   "sttProvider",
+  "detectionMode",
 ] as const satisfies readonly (keyof SettingsState)[]
 
 type PersistedKey = (typeof PERSISTED_KEYS)[number]

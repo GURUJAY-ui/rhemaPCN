@@ -10,6 +10,7 @@ import {
   useQueueStore,
   useBibleStore,
   useTranscriptStore,
+  useSettingsStore,
 } from "@/stores"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
@@ -60,6 +61,7 @@ export function TranscriptPanel() {
     stopTranscription,
   } = useTranscription({ onMissingApiKey })
   const { hymns, detectedHymn } = useHymns()
+  const detectionMode = useSettingsStore((s) => s.detectionMode)
   const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -78,6 +80,10 @@ export function TranscriptPanel() {
 
   // Listen for detection results from the backend (batch replaces previous detections)
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
+    if (detectionMode === "hymns") {
+      return
+    }
+
     useDetectionStore.getState().addDetections(detections)
 
     // Auto-navigate book search + select verse for preview/live
@@ -219,6 +225,9 @@ export function TranscriptPanel() {
                 </p>
                 <p className="font-medium text-foreground">
                   {hymns.length} hymns available.
+                </p>
+                <p className="text-[0.65rem] uppercase tracking-[0.18em] text-muted-foreground">
+                  Detection mode: {detectionMode === "both" ? "Bible + hymns" : detectionMode === "bible" ? "Bible only" : "Hymns only"}
                 </p>
                 {detectedHymn ? (
                   <div className="space-y-2 pt-2">

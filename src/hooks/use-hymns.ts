@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import type { Hymn } from "@/types"
 import { useHymnStore } from "@/stores/hymn-store"
+import { useSettingsStore } from "@/stores/settings-store"
 
 const WORD_SPLIT_RE = /[\s,.!?;:"'“”‘’()\[\]—–]+/g
 
@@ -69,6 +70,7 @@ export function useHymns() {
   const detectedHymn = useHymnStore((state) => state.detectedHymn)
   const setHymns = useHymnStore((state) => state.setHymns)
   const setDetectedHymn = useHymnStore((state) => state.setDetectedHymn)
+  const detectionMode = useSettingsStore((state) => state.detectionMode)
 
   useEffect(() => {
     invoke<Hymn[]>("get_hymns")
@@ -78,7 +80,18 @@ export function useHymns() {
       })
   }, [setHymns])
 
+  useEffect(() => {
+    if (detectionMode === "bible") {
+      setDetectedHymn(null)
+    }
+  }, [detectionMode, setDetectedHymn])
+
   useTauriEvent<{ text: string }>("transcript_final", (payload) => {
+    if (detectionMode === "bible") {
+      setDetectedHymn(null)
+      return
+    }
+
     const match = findBestHymnMatch(payload.text, useHymnStore.getState().hymns)
     setDetectedHymn(match)
   })

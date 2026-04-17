@@ -195,6 +195,8 @@ function SpeechSection() {
     setSttProvider,
     deepgramApiKey,
     setDeepgramApiKey,
+    detectionMode,
+    setDetectionMode,
   } = useSettingsStore()
 
   const [keyValue, setKeyValue] = useState(deepgramApiKey ?? "")
@@ -252,6 +254,55 @@ function SpeechSection() {
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
                 Runs Whisper large-v3-turbo locally on your device. Fully
                 offline, no API key needed. Audio never leaves your machine.
+              </p>
+            </div>
+          </label>
+        </RadioGroup>
+      </div>
+
+      {/* Detection mode */}
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Detection mode
+          </label>
+          <span className="text-[0.625rem] text-muted-foreground">
+            {detectionMode === "both"
+              ? "Bible + hymns"
+              : detectionMode === "bible"
+              ? "Bible only"
+              : "Hymns only"}
+          </span>
+        </div>
+        <RadioGroup
+          value={detectionMode}
+          onValueChange={(value) => setDetectionMode(value as "both" | "bible" | "hymns")}
+          className="grid gap-2"
+        >
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="both" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Bible + Hymns</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Match both Bible verses and hymn text from the live transcript.
+              </p>
+            </div>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="bible" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Bible only</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Only detect Bible verses. Hymn library matching is disabled.
+              </p>
+            </div>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="hymns" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Hymns only</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Only detect and highlight hymns. Bible verse auto-detection is ignored.
               </p>
             </div>
           </label>
