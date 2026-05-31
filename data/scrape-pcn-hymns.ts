@@ -80,7 +80,7 @@ function parseStanzas(wrap: string): Stanza[] {
           : "Refrain"
 
     const text = block
-      .replace(/^\s*\d+\.\s*/, "")
+      .replace(/^\s*\d+\s*[.)]?\s+/, "") // strip leading verse marker: "1 ", "1. ", "1) "
       .replace(/^\s*(chorus|refrain)\s*:?\s*/i, "")
       .trim()
 
