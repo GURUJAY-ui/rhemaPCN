@@ -5,6 +5,8 @@ import { LiveOutputPanel } from "@/components/panels/live-output-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
 import { DetectionsPanel } from "@/components/panels/detections-panel"
+import { HymnsPanel } from "@/components/panels/hymns-panel"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 export function Dashboard() {
   return (
@@ -43,7 +45,18 @@ export function Dashboard() {
       </div>
       {/* Row 3: Search + Detections (own grid, independent of top row columns) */}
       <div className="col-span-4 grid min-h-0 grid-cols-[2fr_1fr] gap-3 px-3 pb-3">
-        <SearchPanel />
+        <Tabs defaultValue="bible" className="flex h-full min-h-0 flex-col gap-2">
+          <TabsList variant="line" className="h-8 shrink-0 self-start">
+            <TabsTrigger value="bible">Bible</TabsTrigger>
+            <TabsTrigger value="hymns">Hymns</TabsTrigger>
+          </TabsList>
+          <TabsContent value="bible" className="min-h-0">
+            <SearchPanel />
+          </TabsContent>
+          <TabsContent value="hymns" className="min-h-0">
+            <HymnsPanel />
+          </TabsContent>
+        </Tabs>
         <DetectionsPanel />
       </div>
     </div>

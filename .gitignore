@@ -30,6 +30,15 @@ data/sources/*.json
 data/cross-refs/cross_references.txt
 data/cross-refs/cross-references.zip
 data/verses-for-embedding.json
+# Hymn corpora are built locally (like the Bible DB). Only the small verified
+# seed + the build/scrape scripts are tracked; bulk/extracted/scraped sources
+# stay local.
+data/hymns/cbh-hymns.json
+data/hymns/pcn-hymns-scraped.json
+data/hymns/_*.py
+# SQLite WAL sidecars (ephemeral)
+data/rhema.db-shm
+data/rhema.db-wal
 
 # Python virtual environment
 .venv/

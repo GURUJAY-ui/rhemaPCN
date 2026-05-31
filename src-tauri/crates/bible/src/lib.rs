@@ -16,8 +16,10 @@ pub mod db;
 pub mod lookup;
 pub mod search;
 pub mod crossref;
+pub mod hymns;
 
 pub use models::*;
 pub use error::*;
 pub use db::*;
 pub use search::Bm25Result;
+pub use hymns::{Hymn, HymnDetail, HymnMatch, HymnStanza, Hymnal};

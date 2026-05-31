@@ -1,6 +1,7 @@
 export { useAudioStore } from "./audio-store"
 export { useTranscriptStore } from "./transcript-store"
 export { useBibleStore } from "./bible-store"
+export { useHymnStore } from "./hymn-store"
 export { useQueueStore } from "./queue-store"
 export { useSettingsStore } from "./settings-store"
 export { useDetectionStore } from "./detection-store"

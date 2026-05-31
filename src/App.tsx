@@ -1,10 +1,12 @@
 import { Dashboard } from "@/components/layout/dashboard"
 import { useRemoteControl } from "@/hooks/use-remote-control"
+import { useHymnDetection } from "@/hooks/use-hymn-detection"
 import { TutorialOverlay } from "@/components/tutorial/tutorial-overlay"
 import { Toaster } from "sonner"
 
 export function App() {
   useRemoteControl()
+  useHymnDetection()
   return (
     <>
       <Dashboard />

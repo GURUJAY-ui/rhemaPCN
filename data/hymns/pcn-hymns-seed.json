@@ -1,0 +1,101 @@
+{
+  "hymnal": {
+    "slug": "pcn",
+    "title": "Presbyterian Church of Nigeria Hymn Book",
+    "language": "en",
+    "license": "public-domain"
+  },
+  "_note": "Seed set for validating the hymns pipeline. Hymn numbers + titles verified against the live PCN source (pcnnewhavenenugu.org); lyrics are the standard public-domain texts. The bulk importer (scrape-pcn-hymns.ts) fills the full hymnal.",
+  "hymns": [
+    {
+      "number": 1,
+      "title": "Holy, Holy, Holy, Lord God Almighty!",
+      "author": "Reginald Heber (1826)",
+      "tune": "Nicaea",
+      "meter": "11.12.12.10",
+      "source": "pcnnewhavenenugu.org",
+      "stanzas": [
+        {
+          "kind": "verse",
+          "label": "1",
+          "text": "Holy, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to thee;\nHoly, holy, holy! merciful and mighty!\nGod in three persons, blessed Trinity!"
+        },
+        {
+          "kind": "verse",
+          "label": "2",
+          "text": "Holy, holy, holy! all the saints adore thee,\nCasting down their golden crowns around the glassy sea;\nCherubim and seraphim falling down before thee,\nWhich wert, and art, and evermore shalt be."
+        },
+        {
+          "kind": "verse",
+          "label": "3",
+          "text": "Holy, holy, holy! though the darkness hide thee,\nThough the eye of sinful man thy glory may not see,\nOnly thou art holy; there is none beside thee,\nPerfect in power, in love, and purity."
+        },
+        {
+          "kind": "verse",
+          "label": "4",
+          "text": "Holy, holy, holy! Lord God Almighty!\nAll thy works shall praise thy name, in earth, and sky, and sea;\nHoly, holy, holy! merciful and mighty!\nGod in three persons, blessed Trinity!"
+        }
+      ]
+    },
+    {
+      "number": 22,
+      "title": "Praise to the Lord, the Almighty, the King of Creation",
+      "author": "Joachim Neander (1680), tr. Catherine Winkworth (1863)",
+      "tune": "Lobe den Herren",
+      "meter": "14.14.4.7.8",
+      "source": "pcnnewhavenenugu.org",
+      "stanzas": [
+        {
+          "kind": "verse",
+          "label": "1",
+          "text": "Praise to the Lord, the Almighty, the King of creation!\nO my soul, praise him, for he is thy health and salvation!\nAll ye who hear, now to his temple draw near;\njoin me in glad adoration!"
+        },
+        {
+          "kind": "verse",
+          "label": "2",
+          "text": "Praise to the Lord, who o'er all things so wondrously reigneth,\nshelters thee under his wings, yea, so gently sustaineth!\nHast thou not seen how thy desires e'er have been\ngranted in what he ordaineth?"
+        },
+        {
+          "kind": "verse",
+          "label": "3",
+          "text": "Praise to the Lord, who doth prosper thy work and defend thee;\nsurely his goodness and mercy here daily attend thee.\nPonder anew what the Almighty can do,\nif with his love he befriend thee."
+        },
+        {
+          "kind": "verse",
+          "label": "4",
+          "text": "Praise to the Lord! O let all that is in me adore him!\nAll that hath life and breath, come now with praises before him!\nLet the Amen sound from his people again;\ngladly for aye we adore him."
+        }
+      ]
+    },
+    {
+      "number": 316,
+      "title": "I Am Not Worthy, Holy Lord",
+      "author": "Henry Williams Baker (1868)",
+      "tune": "Bread of Heaven",
+      "meter": "8.6.8.6",
+      "source": "pcnnewhavenenugu.org",
+      "stanzas": [
+        {
+          "kind": "verse",
+          "label": "1",
+          "text": "I am not worthy, holy Lord,\nthat thou shouldst come to me;\nspeak but the word; one gracious word\ncan set the sinner free."
+        },
+        {
+          "kind": "verse",
+          "label": "2",
+          "text": "I am not worthy; cold and bare\nthe lodging of my soul;\nhow canst thou deign to enter there?\nLord, speak, and make me whole."
+        },
+        {
+          "kind": "verse",
+          "label": "3",
+          "text": "I am not worthy; yet, my God,\nhow can I say thee nay;\nthee, who didst give thy flesh and blood\nmy ransom price to pay?"
+        },
+        {
+          "kind": "verse",
+          "label": "4",
+          "text": "O come! in this sweet morning hour\nfeed me with food divine;\nand fill with all thy love and power\nthis worthless heart of mine."
+        }
+      ]
+    }
+  ]
+}

@@ -53,7 +53,7 @@ fn clean_word(w: &str) -> String {
 
 /// Exact phrase match — wraps entire input in double quotes.
 /// `"Follow peace with all men"` matches only verses containing that exact sequence.
-fn build_phrase_query(input: &str) -> String {
+pub(crate) fn build_phrase_query(input: &str) -> String {
     let cleaned: String = input
         .chars()
         .filter(|c| c.is_alphanumeric() || c.is_whitespace() || *c == '\'')
@@ -68,7 +68,7 @@ fn build_phrase_query(input: &str) -> String {
 /// AND query with stop words removed — all significant words must be present.
 /// `"be doers of the word"` → `doers word` (finds James 1:22).
 /// Capped at 12 terms to prevent expensive queries on long text.
-fn build_and_query(input: &str) -> String {
+pub(crate) fn build_and_query(input: &str) -> String {
     let tokens: Vec<String> = input
         .split_whitespace()
         .map(clean_word)
@@ -84,7 +84,7 @@ fn build_and_query(input: &str) -> String {
 /// OR query with stop words removed — any significant word matches.
 /// `"It's a new creature Old things passed away"` → `"creature" OR "things" OR "passed" OR "away"`.
 /// Capped at 10 terms to prevent expensive queries.
-fn build_or_query(input: &str) -> String {
+pub(crate) fn build_or_query(input: &str) -> String {
     let tokens: Vec<String> = input
         .split_whitespace()
         .map(clean_word)

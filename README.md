@@ -19,6 +19,7 @@ Rhema listens to a live sermon audio feed, transcribes speech in real time, dete
 - **SQLite Bible database** with FTS5 full-text search and BM25 ranking
 - **Multiple translations** — KJV, NIV, ESV, NASB, NKJV, NLT, AMP + Spanish, French, Portuguese
 - **Cross-reference lookup** (340k+ refs from openbible.info)
+- **Hymn library** — searchable hymns (by number, title, or lyric text via FTS5) with stanza-by-stanza projection to the broadcast output, plus live **hymn detection** that matches the choir's sung words against the lyric index and surfaces (optionally auto-displays) the hymn being sung
 - **NDI broadcast output** for live production integration
 - **Theme designer** — visual canvas editor for verse overlays with backgrounds (solid, gradient, image), text styling, positioning, shadows, and outlines
 - **Verse queue** with drag-and-drop ordering and duplicate prevention (flash-highlight on duplicates)
@@ -240,6 +241,8 @@ rhema/
 | `preview` | Preview production build |
 | `download:bible-data` | Download public domain Bible translations + cross-references |
 | `build:bible` | Build SQLite Bible database from JSON sources |
+| `build:hymns` | Import hymns into `rhema.db` from a JSON source (idempotent; does not touch Bible tables) |
+| `scrape:hymns` | Scrape hymns from the PCN parish source into a JSON file for `build:hymns` |
 | `download:model` | Export Qwen3-Embedding-0.6B to ONNX + quantize to INT8 |
 | `export:verses` | Export KJV verses to JSON for embedding precomputation |
 | `precompute:embeddings` | Precompute embeddings via Rust ONNX binary |

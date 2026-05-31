@@ -64,6 +64,12 @@ pub fn run() {
             commands::remote::stop_http,
             commands::remote::get_http_status,
             commands::remote::update_remote_status,
+            commands::hymns::list_hymnals,
+            commands::hymns::list_hymns,
+            commands::hymns::get_hymn,
+            commands::hymns::get_hymn_by_number,
+            commands::hymns::search_hymns,
+            commands::hymns::detect_hymn,
         ])
         .setup(|app| {
             use tauri::Manager;
