@@ -141,7 +141,7 @@ export function HymnsPanel() {
 
       <div className="flex min-h-0 flex-1">
         {/* Left: search + list */}
-        <div className="flex w-1/2 min-w-0 flex-col border-r border-border">
+        <div className="flex w-1/2 min-h-0 min-w-0 flex-col border-r border-border">
           <div className="relative border-b border-border p-2">
             <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -172,7 +172,7 @@ export function HymnsPanel() {
         </div>
 
         {/* Right: selected hymn */}
-        <div className="flex w-1/2 min-w-0 flex-col">
+        <div className="flex w-1/2 min-h-0 min-w-0 flex-col">
           {!selected ? (
             <p className="m-auto p-4 text-center text-xs text-muted-foreground">
               Select a hymn to view its stanzas.

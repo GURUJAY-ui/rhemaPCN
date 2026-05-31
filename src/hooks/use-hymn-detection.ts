@@ -6,7 +6,9 @@ import type { HymnMatch } from "@/types"
 // Detection tuning.
 const POLL_MS = 1500 // how often to re-evaluate the rolling transcript
 const WINDOW_WORDS = 24 // size of the rolling lyric window fed to the matcher
-const MIN_WORDS = 4 // need at least this many words before guessing
+const MIN_WORDS = 6 // need at least this many words before guessing (avoids speech noise)
+const SHOW_CONFIDENCE = 0.3 // weaker matches are dropped from the candidate list
+const STABLE_POLLS = 2 // the same hymn must lead this many polls in a row to count
 const AUTO_DISPLAY_CONFIDENCE = 0.45 // top match must beat this to auto-show
 
 /** Build a rolling window of the most recent transcript words. */
@@ -48,6 +50,9 @@ function bestSlideIndex(slides: HymnSlide[], transcript: string): number {
 export function useHymnDetection() {
   const lastQueryRef = useRef("")
   const lastShownRef = useRef<number | null>(null)
+  const leadingIdRef = useRef<number | null>(null) // hymn currently leading
+  const stableCountRef = useRef(0) // consecutive polls it has led
+  const missCountRef = useRef(0) // consecutive polls with no candidate
   const runningRef = useRef(false)
 
   useEffect(() => {
@@ -64,13 +69,33 @@ export function useHymnDetection() {
       runningRef.current = true
       try {
         const matches = await hymnActions.detectHymn(transcript, 5)
-        useHymnStore.getState().setDetections(matches)
+        const candidates = matches.filter((m) => m.confidence >= SHOW_CONFIDENCE)
+        const top: HymnMatch | undefined = candidates[0]
 
-        const top: HymnMatch | undefined = matches[0]
+        // Nothing plausible — clear the banner after a couple of empty polls.
+        if (!top) {
+          if (++missCountRef.current >= STABLE_POLLS) {
+            useHymnStore.getState().setDetections([])
+            leadingIdRef.current = null
+            stableCountRef.current = 0
+          }
+          return
+        }
+        missCountRef.current = 0
+
+        // Require the same hymn to lead several polls before trusting it.
+        if (top.id === leadingIdRef.current) stableCountRef.current++
+        else {
+          leadingIdRef.current = top.id
+          stableCountRef.current = 1
+        }
+        if (stableCountRef.current < STABLE_POLLS) return
+
+        useHymnStore.getState().setDetections(candidates)
+
         const { autoDisplay } = useHymnStore.getState()
         if (
           autoDisplay &&
-          top &&
           top.confidence >= AUTO_DISPLAY_CONFIDENCE &&
           top.id !== lastShownRef.current
         ) {

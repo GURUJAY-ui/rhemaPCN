@@ -281,9 +281,30 @@ impl BibleDb {
     }
 
     /// Detect which hymn is being sung from a (possibly noisy) transcript.
-    /// Returns ranked candidates; the caller decides when confidence is high
-    /// enough to display. Phrase matches on sung lyrics rank highest.
+    ///
+    /// Stricter than [`search_hymns_ranked`]: it uses phrase and AND matching
+    /// only — never the OR fallback — and requires at least two significant
+    /// (non-stop) words. This stops a single common word (especially one that
+    /// appears in a hymn title, which is heavily weighted) from triggering a
+    /// false "now singing" detection during ordinary speech.
     pub fn detect_hymn(&self, transcript: &str, limit: usize) -> Result<Vec<HymnMatch>, BibleError> {
-        self.search_hymns_ranked(transcript, limit)
+        let conn = self.lock_conn()?;
+
+        // Phrase match — a verbatim run of sung words is the strongest signal.
+        let phrase = build_phrase_query(transcript);
+        let mut results = Self::run_hymn_fts(&conn, &phrase, limit)?;
+
+        // AND match, but only when there are >= 2 significant words.
+        let and_q = build_and_query(transcript);
+        if and_q.split_whitespace().count() >= 2 {
+            results.extend(Self::run_hymn_fts(&conn, &and_q, limit)?);
+        }
+
+        let mut seen = std::collections::HashSet::new();
+        Ok(results
+            .into_iter()
+            .filter(|m| seen.insert(m.hymn.id))
+            .take(limit)
+            .collect())
     }
 }
