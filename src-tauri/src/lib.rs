@@ -20,7 +20,10 @@ pub fn run() {
         )
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(Mutex::new(state::AppState::new()))
+        .manage(Mutex::new(rhema_detection::DetectionPipeline::new()))
         .manage(Mutex::new(rhema_broadcast::ndi::NdiRuntime::default()))
         .manage(Mutex::new(rhema_detection::DirectDetector::new()))
         .manage(Mutex::new(rhema_detection::DetectionMerger::new()))
@@ -129,9 +132,9 @@ pub fn run() {
                         ) {
                             Ok(embedder) => {
                                 log::info!("ONNX embedding model loaded");
-                                let managed_state =
-                                    app_handle.state::<Mutex<state::AppState>>();
-                                let mut state = managed_state.lock().unwrap();
+                                let managed_pipeline = app_handle
+                                    .state::<Mutex<rhema_detection::DetectionPipeline>>();
+                                let mut pipeline = managed_pipeline.lock().unwrap();
 
                                 if embeddings_path.exists() && ids_path.exists() {
                                     let dim = embedder.dimension();
@@ -145,7 +148,7 @@ pub fn run() {
                                                 "Verse embeddings loaded ({} vectors)",
                                                 index.len()
                                             );
-                                            state.detection_pipeline.set_semantic(
+                                            pipeline.set_semantic(
                                                 rhema_detection::SemanticDetector::new(
                                                     Box::new(embedder),
                                                     Box::new(index),
@@ -162,7 +165,7 @@ pub fn run() {
                                     log::info!("No pre-computed verse embeddings found. Run 'bun run export:verses' then the precompute binary.");
                                 }
 
-                                drop(state);
+                                drop(pipeline);
                                 let _ = app_handle.emit("semantic_ready", ());
                             }
                             Err(e) => {

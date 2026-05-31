@@ -46,13 +46,17 @@ export const useDetectionStore = create<DetectionState>((set) => ({
           map.set(d.verse_ref, d)
         }
       }
-      // Existing detections that aren't duplicates
+      // Existing detections — keep if no duplicate, or if higher confidence than incoming
       for (const d of state.detections) {
-        if (!map.has(d.verse_ref)) {
+        const existing = map.get(d.verse_ref)
+        if (!existing || d.confidence > existing.confidence) {
           map.set(d.verse_ref, d)
         }
       }
-      return { detections: [...map.values()].slice(0, 50) }
+      // Sort by confidence so high-confidence direct detections appear above semantic
+      return { detections: [...map.values()]
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, 50) }
     }),
   setDetections: (detections) => set({ detections }),
   removeDetection: (verseRef) =>
