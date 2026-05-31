@@ -34,7 +34,7 @@ data/verses-for-embedding.json
 # seed + the build/scrape scripts are tracked; bulk/extracted/scraped sources
 # stay local.
 data/hymns/cbh-hymns.json
-data/hymns/pcn-hymns-scraped.json
+data/hymns/pcn-hymns-scraped*.json
 data/hymns/_*.py
 # SQLite WAL sidecars (ephemeral)
 data/rhema.db-shm

@@ -23,8 +23,8 @@ const START = Number(process.argv[2] ?? 1)
 const END = Number(process.argv[3] ?? 1000)
 const OUT = process.argv[4] ?? join(DATA_DIR, "hymns", "pcn-hymns-scraped.json")
 const BASE = "https://pcnnewhavenenugu.org/hymn?id="
-const DELAY_MS = 600
-const MAX_CONSECUTIVE_MISSES = 25 // stop early once we run past the end of the book
+const DELAY_MS = 1200
+const MAX_CONSECUTIVE_MISSES = 40 // stop early once we run past the end of the book
 
 interface Stanza { kind: "verse" | "chorus" | "refrain"; label: string; text: string }
 interface Hymn { number: number; title: string; source: string; stanzas: Stanza[] }
