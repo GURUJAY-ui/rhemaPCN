@@ -44,16 +44,16 @@ export function Dashboard() {
         <QueuePanel />
       </div>
       {/* Row 3: Search + Detections (own grid, independent of top row columns) */}
-      <div className="col-span-4 grid min-h-0 grid-cols-[2fr_1fr] gap-3 px-3 pb-3">
-        <Tabs defaultValue="bible" className="flex h-full min-h-0 flex-col gap-2">
+      <div className="col-span-4 grid min-h-0 grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-3 px-3 pb-3">
+        <Tabs defaultValue="bible" className="flex h-full min-h-0 min-w-0 flex-col gap-2">
           <TabsList variant="line" className="h-8 shrink-0 self-start">
             <TabsTrigger value="bible">Bible</TabsTrigger>
             <TabsTrigger value="hymns">Hymns</TabsTrigger>
           </TabsList>
-          <TabsContent value="bible" className="min-h-0">
+          <TabsContent value="bible" className="min-h-0 min-w-0">
             <SearchPanel />
           </TabsContent>
-          <TabsContent value="hymns" className="min-h-0">
+          <TabsContent value="hymns" className="min-h-0 min-w-0">
             <HymnsPanel />
           </TabsContent>
         </Tabs>

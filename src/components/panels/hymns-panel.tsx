@@ -103,7 +103,7 @@ export function HymnsPanel() {
   return (
     <div
       data-slot="hymns-panel"
-      className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <PanelHeader title="Hymns" icon={<MusicIcon className="size-3.5" />}>
         <label className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-wide text-muted-foreground">
