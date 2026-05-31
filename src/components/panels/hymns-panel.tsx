@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   MusicIcon,
   SearchIcon,
@@ -13,7 +13,15 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useHymns, hymnActions, hymnReference } from "@/hooks/use-hymns"
+import type { LinesPerSlide } from "@/stores/hymn-store"
 import type { Hymn } from "@/types"
+
+const SLIDE_OPTIONS: { value: LinesPerSlide; label: string }[] = [
+  { value: "stanza", label: "Stanza" },
+  { value: 2, label: "2" },
+  { value: 4, label: "4" },
+  { value: 6, label: "6" },
+]
 
 function HymnRow({
   hymn,
@@ -53,13 +61,13 @@ export function HymnsPanel() {
     searchResults,
     query,
     selected,
-    stanzaIndex,
+    slideIndex,
+    linesPerSlide,
     detections,
     autoDisplay,
     setQuery,
-    setStanzaIndex,
-    nextStanza,
-    prevStanza,
+    setSlideIndex,
+    setLinesPerSlide,
     setAutoDisplay,
   } = useHymns()
 
@@ -84,7 +92,13 @@ export function HymnsPanel() {
   }, [query])
 
   const list = query.trim() ? searchResults : hymns
-  const stanza = selected?.stanzas[stanzaIndex]
+
+  const slides = useMemo(
+    () => (selected ? hymnActions.buildSlides(selected, selected.stanzas, linesPerSlide) : []),
+    [selected, linesPerSlide]
+  )
+  const clampedIndex = Math.min(slideIndex, Math.max(0, slides.length - 1))
+  const slide = slides[clampedIndex]
 
   return (
     <div
@@ -165,29 +179,46 @@ export function HymnsPanel() {
             </p>
           ) : (
             <>
-              <div className="border-b border-border px-3 py-2">
-                <p className="text-sm font-semibold text-foreground">
-                  {selected.number != null && (
-                    <span className="text-muted-foreground">{selected.number}. </span>
+              <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {selected.number != null && (
+                      <span className="text-muted-foreground">{selected.number}. </span>
+                    )}
+                    {selected.title}
+                  </p>
+                  {selected.author && (
+                    <p className="truncate text-[0.625rem] text-muted-foreground">{selected.author}</p>
                   )}
-                  {selected.title}
-                </p>
-                {selected.author && (
-                  <p className="text-[0.625rem] text-muted-foreground">{selected.author}</p>
-                )}
+                </div>
+                {/* Lines-per-slide control */}
+                <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-border p-0.5">
+                  {SLIDE_OPTIONS.map((opt) => (
+                    <button
+                      key={String(opt.value)}
+                      onClick={() => setLinesPerSlide(opt.value)}
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[0.625rem] font-medium transition-colors",
+                        linesPerSlide === opt.value
+                          ? "bg-accent text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      title={opt.value === "stanza" ? "Whole stanza per slide" : `${opt.value} lines per slide`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-                {stanza ? (
+                {slide ? (
                   <>
                     <p className="mb-1 text-[0.625rem] uppercase tracking-wide text-muted-foreground">
-                      {stanza.kind === "verse"
-                        ? `Verse ${stanza.label ?? stanza.position}`
-                        : stanza.label ?? stanza.kind}{" "}
-                      · {stanzaIndex + 1}/{selected.stanzas.length}
+                      {slide.reference} · slide {clampedIndex + 1}/{slides.length}
                     </p>
                     <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
-                      {stanza.text}
+                      {slide.text}
                     </p>
                   </>
                 ) : (
@@ -195,14 +226,14 @@ export function HymnsPanel() {
                 )}
               </div>
 
-              {stanza && (
+              {slide && (
                 <div className="flex items-center gap-1 border-t border-border p-2">
                   <Button
                     size="sm"
                     variant="outline"
                     className="px-2"
-                    disabled={stanzaIndex === 0}
-                    onClick={prevStanza}
+                    disabled={clampedIndex === 0}
+                    onClick={() => setSlideIndex(clampedIndex - 1)}
                   >
                     <ChevronUpIcon className="size-3.5" />
                   </Button>
@@ -210,18 +241,15 @@ export function HymnsPanel() {
                     size="sm"
                     variant="outline"
                     className="px-2"
-                    disabled={stanzaIndex >= selected.stanzas.length - 1}
-                    onClick={nextStanza}
+                    disabled={clampedIndex >= slides.length - 1}
+                    onClick={() => setSlideIndex(clampedIndex + 1)}
                   >
                     <ChevronDownIcon className="size-3.5" />
                   </Button>
                   <Button
                     size="sm"
                     className="ml-auto gap-1.5"
-                    onClick={() => {
-                      hymnActions.goLiveWithStanza(selected, stanza)
-                      setStanzaIndex(stanzaIndex)
-                    }}
+                    onClick={() => hymnActions.goLiveSlide(slide)}
                   >
                     <RadioIcon className="size-3.5" />
                     Go Live

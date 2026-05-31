@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core"
 import { useHymnStore } from "@/stores"
+import type { LinesPerSlide } from "@/stores/hymn-store"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import type { Hymn, HymnDetail, HymnMatch, Hymnal, HymnStanza, VerseRenderData } from "@/types"
 
@@ -39,6 +40,12 @@ async function detectHymn(transcript: string, limit = 5) {
   return invoke<HymnMatch[]>("detect_hymn", { transcript, limit })
 }
 
+/** A single projectable unit (whole stanza, or an N-line chunk of one). */
+export interface HymnSlide {
+  reference: string
+  text: string
+}
+
 /** Human-readable reference label for a hymn stanza. */
 export function hymnReference(hymn: Pick<Hymn, "number" | "title">, stanza?: HymnStanza): string {
   const base = hymn.number != null ? `Hymn ${hymn.number}` : hymn.title
@@ -48,18 +55,41 @@ export function hymnReference(hymn: Pick<Hymn, "number" | "title">, stanza?: Hym
   return `${base} · ${label}`
 }
 
-/** Map a hymn stanza onto the broadcast renderer's VerseRenderData. */
-function stanzaToRenderData(hymn: Hymn | HymnDetail, stanza: HymnStanza): VerseRenderData {
-  return {
-    reference: hymnReference(hymn, stanza),
-    segments: [{ text: stanza.text }],
+/**
+ * Flatten a hymn into projectable slides. With `"stanza"` each stanza is one
+ * slide; with a number, each stanza is split into chunks of that many lines
+ * (chunks never cross stanza boundaries). When a stanza spans multiple slides
+ * the reference gains a page marker (e.g. "Verse 2 (2/3)").
+ */
+export function buildSlides(hymn: Hymn, stanzas: HymnStanza[], linesPerSlide: LinesPerSlide): HymnSlide[] {
+  const slides: HymnSlide[] = []
+  for (const stanza of stanzas) {
+    const ref = hymnReference(hymn, stanza)
+    if (linesPerSlide === "stanza") {
+      slides.push({ reference: ref, text: stanza.text })
+      continue
+    }
+    const lines = stanza.text.split("\n")
+    const pages = Math.ceil(lines.length / linesPerSlide)
+    for (let p = 0; p < pages; p++) {
+      const chunk = lines.slice(p * linesPerSlide, (p + 1) * linesPerSlide).join("\n")
+      slides.push({
+        reference: pages > 1 ? `${ref} (${p + 1}/${pages})` : ref,
+        text: chunk,
+      })
+    }
   }
+  return slides
 }
 
-/** Push a hymn stanza to the live broadcast/NDI output using the active theme. */
-function goLiveWithStanza(hymn: Hymn | HymnDetail, stanza: HymnStanza) {
+function slideToRenderData(slide: HymnSlide): VerseRenderData {
+  return { reference: slide.reference, segments: [{ text: slide.text }] }
+}
+
+/** Push a projectable slide to the live broadcast/NDI output using the active theme. */
+function goLiveSlide(slide: HymnSlide) {
   const bs = useBroadcastStore.getState()
-  bs.setLiveVerse(stanzaToRenderData(hymn, stanza))
+  bs.setLiveVerse(slideToRenderData(slide))
   bs.setLive(true)
 }
 
@@ -70,7 +100,8 @@ export const hymnActions = {
   getHymnByNumber,
   searchHymns,
   detectHymn,
-  goLiveWithStanza,
+  goLiveSlide,
+  buildSlides,
   hymnReference,
 }
 
@@ -80,7 +111,8 @@ export function useHymns() {
   const searchResults = useHymnStore((s) => s.searchResults)
   const query = useHymnStore((s) => s.query)
   const selected = useHymnStore((s) => s.selected)
-  const stanzaIndex = useHymnStore((s) => s.stanzaIndex)
+  const slideIndex = useHymnStore((s) => s.slideIndex)
+  const linesPerSlide = useHymnStore((s) => s.linesPerSlide)
   const detections = useHymnStore((s) => s.detections)
   const autoDisplay = useHymnStore((s) => s.autoDisplay)
 
@@ -90,14 +122,14 @@ export function useHymns() {
     searchResults,
     query,
     selected,
-    stanzaIndex,
+    slideIndex,
+    linesPerSlide,
     detections,
     autoDisplay,
     setQuery: useHymnStore((s) => s.setQuery),
     setSelected: useHymnStore((s) => s.setSelected),
-    setStanzaIndex: useHymnStore((s) => s.setStanzaIndex),
-    nextStanza: useHymnStore((s) => s.nextStanza),
-    prevStanza: useHymnStore((s) => s.prevStanza),
+    setSlideIndex: useHymnStore((s) => s.setSlideIndex),
+    setLinesPerSlide: useHymnStore((s) => s.setLinesPerSlide),
     setAutoDisplay: useHymnStore((s) => s.setAutoDisplay),
     ...hymnActions,
   }

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useTranscriptStore, useHymnStore } from "@/stores"
-import { hymnActions } from "@/hooks/use-hymns"
-import type { HymnDetail, HymnMatch } from "@/types"
+import { hymnActions, type HymnSlide } from "@/hooks/use-hymns"
+import type { HymnMatch } from "@/types"
 
 // Detection tuning.
 const POLL_MS = 1500 // how often to re-evaluate the rolling transcript
@@ -18,15 +18,15 @@ function recentTranscript(): string {
   return words.slice(-WINDOW_WORDS).join(" ")
 }
 
-/** Pick the stanza whose words best overlap the heard lyrics. */
-function bestStanzaIndex(detail: HymnDetail, transcript: string): number {
+/** Pick the slide whose words best overlap the heard lyrics. */
+function bestSlideIndex(slides: HymnSlide[], transcript: string): number {
   const heard = new Set(
     transcript.toLowerCase().replace(/[^a-z\s']/g, " ").split(/\s+/).filter((w) => w.length > 2)
   )
   if (heard.size === 0) return 0
   let bestIdx = 0
   let bestScore = -1
-  detail.stanzas.forEach((s, i) => {
+  slides.forEach((s, i) => {
     const words = s.text.toLowerCase().replace(/[^a-z\s']/g, " ").split(/\s+/)
     const score = words.reduce((acc, w) => acc + (heard.has(w) ? 1 : 0), 0)
     if (score > bestScore) {
@@ -76,9 +76,11 @@ export function useHymnDetection() {
         ) {
           const detail = await hymnActions.getHymn(top.id)
           if (detail) {
-            const idx = bestStanzaIndex(detail, transcript)
-            useHymnStore.getState().setStanzaIndex(idx)
-            hymnActions.goLiveWithStanza(detail, detail.stanzas[idx])
+            const { linesPerSlide } = useHymnStore.getState()
+            const slides = hymnActions.buildSlides(detail, detail.stanzas, linesPerSlide)
+            const idx = bestSlideIndex(slides, transcript)
+            useHymnStore.getState().setSlideIndex(idx)
+            hymnActions.goLiveSlide(slides[idx])
             lastShownRef.current = top.id
           }
         }

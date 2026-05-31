@@ -1,6 +1,9 @@
 import { create } from "zustand"
 import type { Hymn, HymnDetail, HymnMatch, Hymnal } from "@/types"
 
+/** How many lyric lines to show per projected slide. "stanza" = whole stanza. */
+export type LinesPerSlide = "stanza" | 2 | 4 | 6
+
 interface HymnState {
   hymnals: Hymnal[]
   hymns: Hymn[]
@@ -8,7 +11,9 @@ interface HymnState {
   query: string
 
   selected: HymnDetail | null
-  stanzaIndex: number
+  /** Index into the derived slide list (see buildSlides). */
+  slideIndex: number
+  linesPerSlide: LinesPerSlide
 
   /** Live detection candidates from the choir's singing (ranked). */
   detections: HymnMatch[]
@@ -20,20 +25,20 @@ interface HymnState {
   setSearchResults: (h: Hymn[]) => void
   setQuery: (q: string) => void
   setSelected: (h: HymnDetail | null) => void
-  setStanzaIndex: (i: number) => void
-  nextStanza: () => void
-  prevStanza: () => void
+  setSlideIndex: (i: number) => void
+  setLinesPerSlide: (n: LinesPerSlide) => void
   setDetections: (d: HymnMatch[]) => void
   setAutoDisplay: (v: boolean) => void
 }
 
-export const useHymnStore = create<HymnState>((set, get) => ({
+export const useHymnStore = create<HymnState>((set) => ({
   hymnals: [],
   hymns: [],
   searchResults: [],
   query: "",
   selected: null,
-  stanzaIndex: 0,
+  slideIndex: 0,
+  linesPerSlide: "stanza",
   detections: [],
   autoDisplay: false,
 
@@ -41,17 +46,9 @@ export const useHymnStore = create<HymnState>((set, get) => ({
   setHymns: (hymns) => set({ hymns }),
   setSearchResults: (searchResults) => set({ searchResults }),
   setQuery: (query) => set({ query }),
-  setSelected: (selected) => set({ selected, stanzaIndex: 0 }),
-  setStanzaIndex: (stanzaIndex) => set({ stanzaIndex }),
-  nextStanza: () => {
-    const { selected, stanzaIndex } = get()
-    if (!selected) return
-    set({ stanzaIndex: Math.min(stanzaIndex + 1, selected.stanzas.length - 1) })
-  },
-  prevStanza: () => {
-    const { stanzaIndex } = get()
-    set({ stanzaIndex: Math.max(stanzaIndex - 1, 0) })
-  },
+  setSelected: (selected) => set({ selected, slideIndex: 0 }),
+  setSlideIndex: (slideIndex) => set({ slideIndex }),
+  setLinesPerSlide: (linesPerSlide) => set({ linesPerSlide, slideIndex: 0 }),
   setDetections: (detections) => set({ detections }),
   setAutoDisplay: (autoDisplay) => set({ autoDisplay }),
 }))
