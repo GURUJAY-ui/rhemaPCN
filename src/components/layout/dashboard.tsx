@@ -50,10 +50,10 @@ export function Dashboard() {
             <TabsTrigger value="bible">Bible</TabsTrigger>
             <TabsTrigger value="hymns">Hymns</TabsTrigger>
           </TabsList>
-          <TabsContent value="bible" className="min-h-0 min-w-0">
+          <TabsContent value="bible" className="flex min-h-0 min-w-0 flex-col">
             <SearchPanel />
           </TabsContent>
-          <TabsContent value="hymns" className="min-h-0 min-w-0">
+          <TabsContent value="hymns" className="flex min-h-0 min-w-0 flex-col">
             <HymnsPanel />
           </TabsContent>
         </Tabs>

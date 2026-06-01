@@ -172,7 +172,7 @@ export function SearchPanel() {
             .getElementById(`verse-${target.id}`)
             ?.scrollIntoView({ behavior: "smooth", block: "center" })
         }
-        panelRef.current?.focus()
+        panelRef.current?.focus({ preventScroll: true })
       }).catch(console.error).finally(() => {
         useBibleStore.getState().setPendingNavigation(null)
       })
@@ -310,7 +310,7 @@ export function SearchPanel() {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (quickInputRef.current && document.activeElement !== quickInputRef.current) {
-            quickInputRef.current.focus()
+            quickInputRef.current.focus({ preventScroll: true })
           }
         })
       })
