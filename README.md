@@ -21,6 +21,7 @@ Rhema listens to a live sermon audio feed, transcribes speech in real time, dete
 - **Cross-reference lookup** (340k+ refs from openbible.info)
 - **Hymn library** — searchable hymns (by number, title, or lyric text via FTS5) with stanza-by-stanza projection to the broadcast output, plus live **hymn detection** that matches the choir's sung words against the lyric index and surfaces (optionally auto-displays) the hymn being sung
 - **NDI broadcast output** for live production integration
+  - [EasyWorship + OBS overlay guide](documentation/easyworship-obs-overlay.md) — show Rhema's auto-detected verses/hymns as a transparent lower-third over EasyWorship
 - **Theme designer** — visual canvas editor for verse overlays with backgrounds (solid, gradient, image), text styling, positioning, shadows, and outlines
 - **Verse queue** with drag-and-drop ordering and duplicate prevention (flash-highlight on duplicates)
 - **Quick navigation** — keyboard-driven verse entry with autocomplete (e.g., type "J" → Joshua, Tab through book → chapter → verse)
