@@ -105,8 +105,16 @@ pub fn run() {
             std::thread::Builder::new()
                 .name("model-loader".into())
                 .spawn(move || {
-                    let base_dir =
-                        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+                    // Production: models/embeddings are bundled under the resource dir.
+                    // Dev: fall back to the repo layout (../models, ../embeddings).
+                    let base_dir = app_handle
+                        .path()
+                        .resource_dir()
+                        .ok()
+                        .filter(|p| p.join("models").exists())
+                        .unwrap_or_else(|| {
+                            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")
+                        });
                     let model_path = {
                         let int8 = base_dir
                             .join("models/qwen3-embedding-0.6b-int8/model_quantized.onnx");

@@ -159,10 +159,21 @@ pub fn start_ndi(
     runtime: State<'_, Mutex<NdiRuntime>>,
     request: NdiStartRequest,
 ) -> Result<NdiSessionInfo, String> {
+    log::info!(
+        "[NDI] start requested: output={output_id} source={:?} res={:?} fps={:?} alpha={:?}",
+        request.source_name, request.resolution, request.frame_rate, request.alpha_mode
+    );
     let mut runtime = runtime.lock().map_err(|e| e.to_string())?;
-    runtime
-        .start(output_id, request)
-        .map_err(|e| e.to_string())
+    match runtime.start(output_id, request) {
+        Ok(info) => {
+            log::info!("[NDI] started OK: {}x{} @ {}fps", info.width, info.height, info.fps);
+            Ok(info)
+        }
+        Err(e) => {
+            log::error!("[NDI] start FAILED: {e}");
+            Err(e.to_string())
+        }
+    }
 }
 
 #[tauri::command]

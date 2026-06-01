@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core"
 import { emitTo, listen } from "@tauri-apps/api/event"
 import { availableMonitors, getAllWindows, type Monitor } from '@tauri-apps/api/window'
@@ -269,8 +270,8 @@ export function BroadcastSettings({
           syncNdiConfigToOutput("main", true, ndiFrameRate, ndiResolution)
         }, 300)
       }
-    } catch {
-      // Command may not exist yet
+    } catch (e) {
+      toast.error("Could not start NDI", { description: String(e) })
     }
   }
 

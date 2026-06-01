@@ -397,14 +397,48 @@ fn resolve_library_path() -> Result<PathBuf, NdiError> {
         ]
     };
 
-    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    for candidate in &candidates {
-        if candidate.is_empty() {
-            continue;
+    // Base directories to search, in priority order.
+    let mut bases: Vec<PathBuf> = Vec::new();
+    // 1. Explicit override.
+    if let Ok(dir) = std::env::var("RHEMA_NDI_DIR") {
+        bases.push(PathBuf::from(dir));
+    }
+    // 2. Next to the installed executable and its bundled resources (production).
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            bases.push(dir.to_path_buf());
+            bases.push(dir.join("resources"));
         }
-        let absolute = base.join(candidate);
-        if absolute.exists() {
-            return Ok(absolute);
+    }
+    // 3. Repo layout (dev / `cargo run`).
+    bases.push(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.."));
+
+    for base in &bases {
+        for candidate in &candidates {
+            if candidate.is_empty() {
+                continue;
+            }
+            let absolute = base.join(candidate);
+            if absolute.exists() {
+                return Ok(absolute);
+            }
+        }
+    }
+
+    // 4. Fall back to a system-installed NDI runtime (no bundling required).
+    let dll_name = if cfg!(target_os = "windows") {
+        "Processing.NDI.Lib.x64.dll"
+    } else if cfg!(target_os = "macos") {
+        "libndi.dylib"
+    } else {
+        "libndi.so.6"
+    };
+    for var in ["NDI_RUNTIME_DIR_V6", "NDI_RUNTIME_DIR_V5"] {
+        if let Ok(dir) = std::env::var(var) {
+            let absolute = Path::new(&dir).join(dll_name);
+            if absolute.exists() {
+                return Ok(absolute);
+            }
         }
     }
 
