@@ -64,9 +64,17 @@ base64 = "0.22"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 
+[dev-dependencies]
+tauri = { version = "2.10.3", features = ["test"] }
+
 [features]
 default = ["whisper"]
 whisper = ["rhema-stt/whisper"]
+# End-to-end Tauri command tests (tauri::test). Off by default because the
+# app-crate test binary needs the native runtime DLLs (WebView2/DirectML/ONNX)
+# resolvable, which isn't the case on every dev machine. Run with:
+#   cargo test -p app --features command-tests
+command-tests = []
 
 [lints]
 workspace = true

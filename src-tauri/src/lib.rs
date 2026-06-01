@@ -2,6 +2,9 @@ mod commands;
 mod events;
 mod state;
 
+#[cfg(all(test, feature = "command-tests"))]
+mod command_tests;
+
 use std::sync::Mutex;
 use tauri::Emitter;
 
