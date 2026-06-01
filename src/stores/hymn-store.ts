@@ -40,7 +40,8 @@ export const useHymnStore = create<HymnState>((set) => ({
   slideIndex: 0,
   linesPerSlide: "stanza",
   detections: [],
-  autoDisplay: false,
+  // On by default: as the choir sings, the detected hymn auto-projects.
+  autoDisplay: true,
 
   setHymnals: (hymnals) => set({ hymnals }),
   setHymns: (hymns) => set({ hymns }),

@@ -131,7 +131,15 @@ export function BroadcastSettings({
   const reconcilePreviewState = useCallback(async (outputId: string = "main") => {
     const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
     const windows = await getAllWindows()
-    return windows.some((w) => w.label === label)
+    const win = windows.find((w) => w.label === label)
+    if (!win) return false
+    // The window may be kept alive but hidden as an NDI source; only count it as
+    // an open *preview* when it is actually visible, so the toggle never sticks.
+    try {
+      return await win.isVisible()
+    } catch {
+      return false
+    }
   }, [])
 
   const fetchMonitors = useCallback(async () => {
