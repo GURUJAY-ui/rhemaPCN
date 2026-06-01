@@ -147,6 +147,12 @@ function main() {
      FROM hymns h;`
   )
 
+  // Fold the WAL into the main .db file so a plain file copy (Tauri resource
+  // bundling / dev resource copy) includes the hymns AND the FTS index.
+  // Without this, FTS writes can linger in the -wal sidecar and a copied DB
+  // ends up with an empty hymns_fts (search + detection silently return nothing).
+  db.exec("PRAGMA wal_checkpoint(TRUNCATE);")
+
   const total = (db.prepare("SELECT COUNT(*) AS n FROM hymns").get() as { n: number }).n
   console.log(`✓ Imported ${imported} hymn(s). Hymnal now holds ${total} total.`)
   db.close()
