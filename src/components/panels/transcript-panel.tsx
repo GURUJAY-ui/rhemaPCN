@@ -10,6 +10,7 @@ import {
   useQueueStore,
   useBibleStore,
   useTranscriptStore,
+  useBroadcastStore,
 } from "@/stores"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
@@ -101,6 +102,11 @@ export function TranscriptPanel() {
           chapter: directHit.chapter,
           verse: directHit.verse,
         })
+      // Auto-present to the live output when auto-mode is on. selectVerse()
+      // already cleared any hymn override, so the detected verse takes the screen.
+      if (useDetectionStore.getState().autoMode) {
+        useBroadcastStore.getState().setLive(true)
+      }
     }
 
     // Auto-queue high-confidence detections

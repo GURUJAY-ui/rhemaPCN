@@ -17,7 +17,8 @@ interface DetectionState {
 
 export const useDetectionStore = create<DetectionState>((set) => ({
   detections: [],
-  autoMode: false,
+  // On by default: a confidently detected verse auto-presents to the live output.
+  autoMode: true,
   confidenceThreshold: 0.8,
 
   addDetection: (detection) =>
