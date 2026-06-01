@@ -602,6 +602,15 @@ export function BroadcastSettings({
                     placeholder="Rhema Output"
                   />
                 </div>
+                <p className="rounded-md border border-border bg-muted/30 p-2 text-[0.6875rem] leading-relaxed text-muted-foreground">
+                  Once started, this appears as an NDI source named{" "}
+                  <span className="font-medium text-foreground">“{ndiSourceName || "Rhema Output"}”</span> on
+                  this network. In <span className="font-medium text-foreground">EasyWorship</span>, add it via{" "}
+                  <span className="font-medium text-foreground">Media → Feeds → Feed Editor</span>. To overlay
+                  Rhema on top of EasyWorship’s lyrics, bring both into{" "}
+                  <span className="font-medium text-foreground">OBS</span> as NDI sources and stack Rhema on top
+                  (enable transparent/alpha above for a lower-third). Receiver must be on the same PC or network.
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
