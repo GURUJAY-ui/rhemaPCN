@@ -58,35 +58,42 @@ pub async fn start_transcription(
     let stt_provider: Box<dyn SttProvider> = match provider_name {
         #[cfg(feature = "whisper")]
         "whisper" => {
-            // Resolve bundled Whisper model path.
-            // Dev: {CARGO_MANIFEST_DIR}/../models/whisper/ggml-large-v3-turbo-q8_0.bin
-            // Prod: resource_dir()/models/whisper/ggml-large-v3-turbo-q8_0.bin
-            let model_filename = "ggml-large-v3-turbo-q8_0.bin";
-            let model_path = {
-                let base_dir =
-                    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-                let dev_path = base_dir
-                    .join("models")
-                    .join("whisper")
-                    .join(model_filename);
-                if dev_path.exists() {
-                    dev_path
-                } else {
-                    app.path()
-                        .resource_dir()
-                        .map(|p| {
-                            p.join("models")
-                                .join("whisper")
-                                .join(model_filename)
-                        })
-                        .ok()
-                        .filter(|p| p.exists())
-                        .ok_or_else(|| {
-                            "Whisper model not found. Run: bun run download:whisper"
-                                .to_string()
-                        })?
-                }
-            };
+            // Resolve the Whisper model, preferring the fastest available so
+            // transcription keeps up in real time on CPU-only church PCs.
+            // (large-v3-turbo is ~18x slower than real-time on a low-end CPU.)
+            // Checked in both the dev repo layout and the bundled resource dir.
+            let model_candidates = [
+                "ggml-base.en.bin",             // fast, near real-time on CPU
+                "ggml-small.en.bin",            // more accurate, still usable
+                "ggml-large-v3-turbo-q8_0.bin", // most accurate, needs a strong CPU/GPU
+            ];
+            let dev_base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("models")
+                .join("whisper");
+            let resource_base = app
+                .path()
+                .resource_dir()
+                .ok()
+                .map(|p| p.join("models").join("whisper"));
+            let model_path = model_candidates
+                .iter()
+                .find_map(|name| {
+                    let dev = dev_base.join(name);
+                    if dev.exists() {
+                        return Some(dev);
+                    }
+                    if let Some(rb) = &resource_base {
+                        let prod = rb.join(name);
+                        if prod.exists() {
+                            return Some(prod);
+                        }
+                    }
+                    None
+                })
+                .ok_or_else(|| {
+                    "Whisper model not found. Run: bun run download:whisper".to_string()
+                })?;
 
             let parallelism = std::thread::available_parallelism()
                 .map_or(4, usize::from);

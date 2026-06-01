@@ -42,6 +42,7 @@
       "../models/qwen3-embedding-0.6b/tokenizer.json": "models/qwen3-embedding-0.6b/tokenizer.json",
       "../embeddings/kjv-qwen3-0.6b.bin": "embeddings/kjv-qwen3-0.6b.bin",
       "../embeddings/kjv-qwen3-0.6b-ids.bin": "embeddings/kjv-qwen3-0.6b-ids.bin",
+      "../models/whisper/ggml-base.en.bin": "models/whisper/ggml-base.en.bin",
       "../sdk/ndi/windows/Processing.NDI.Lib.x64.dll": "sdk/ndi/windows/Processing.NDI.Lib.x64.dll"
     }
   }
