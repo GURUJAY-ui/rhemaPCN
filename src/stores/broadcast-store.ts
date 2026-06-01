@@ -12,6 +12,9 @@ interface BroadcastState {
   altActiveThemeId: string
   isLive: boolean
   liveVerse: VerseRenderData | null
+  /** Non-verse live content (e.g. a hymn slide) that takes precedence over the
+   *  selected Bible verse on the preview/live output. Cleared when a verse is selected. */
+  liveOverride: VerseRenderData | null
 
   // Designer state
   isDesignerOpen: boolean
@@ -31,6 +34,7 @@ interface BroadcastState {
   setAltActiveTheme: (id: string) => void
   setLive: (live: boolean) => void
   setLiveVerse: (verse: VerseRenderData | null) => void
+  setLiveOverride: (verse: VerseRenderData | null) => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
 
@@ -97,6 +101,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   altActiveThemeId: BUILTIN_THEMES[0].id,
   isLive: false,
   liveVerse: null,
+  liveOverride: null,
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -191,6 +196,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set({ liveVerse })
     get().syncBroadcastOutput()
   },
+  setLiveOverride: (liveOverride) => set({ liveOverride }),
 
   // Designer
   setDesignerOpen: (isDesignerOpen) => {

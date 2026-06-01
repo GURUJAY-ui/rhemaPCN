@@ -27,8 +27,11 @@ export function PreviewPanel() {
 
   const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
   const translation = translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
+  const liveOverride = useBroadcastStore((s) => s.liveOverride)
 
-  const verseData = selectedVerse ? toVerseRenderData(selectedVerse, translation) : null
+  // Show the hymn (or other) override when present, else the selected Bible verse.
+  const verseData =
+    liveOverride ?? (selectedVerse ? toVerseRenderData(selectedVerse, translation) : null)
 
   return (
     <div

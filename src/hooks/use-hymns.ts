@@ -89,7 +89,9 @@ function slideToRenderData(slide: HymnSlide): VerseRenderData {
 /** Push a projectable slide to the live broadcast/NDI output using the active theme. */
 function goLiveSlide(slide: HymnSlide) {
   const bs = useBroadcastStore.getState()
-  bs.setLiveVerse(slideToRenderData(slide))
+  // Set as the live override so the preview/live panels show the hymn instead
+  // of re-deriving from the selected Bible verse.
+  bs.setLiveOverride(slideToRenderData(slide))
   bs.setLive(true)
 }
 

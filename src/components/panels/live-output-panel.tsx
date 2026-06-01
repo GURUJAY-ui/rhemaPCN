@@ -4,12 +4,13 @@ import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore, useBibleStore } from "@/stores"
-import { deriveLiveVerse } from "@/hooks/use-broadcast"
+import { toVerseRenderData } from "@/hooks/use-broadcast"
 
 export function LiveOutputPanel() {
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
+  const liveOverride = useBroadcastStore((s) => s.liveOverride)
 
   // Read the same data source as the preview panel
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
@@ -20,11 +21,10 @@ export function LiveOutputPanel() {
   const translation =
     translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
 
-  const verseData = deriveLiveVerse({
-    isLive,
-    selectedVerse,
-    translation,
-  })
+  // A hymn (or other) override wins over the selected Bible verse; only shown when live.
+  const liveContent =
+    liveOverride ?? (selectedVerse ? toVerseRenderData(selectedVerse, translation) : null)
+  const verseData = isLive ? liveContent : null
 
   useEffect(() => {
     useBroadcastStore.getState().setLiveVerse(verseData)

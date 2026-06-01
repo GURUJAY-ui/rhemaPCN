@@ -3,6 +3,7 @@ import { load } from "@tauri-apps/plugin-store"
 import { invoke } from "@tauri-apps/api/core"
 import type { Translation, Book, Verse, CrossReference } from "@/types"
 import type { SemanticSearchResult } from "@/types/detection"
+import { useBroadcastStore } from "@/stores/broadcast-store"
 
 interface PendingNavigation {
   bookNumber: number
@@ -48,7 +49,11 @@ export const useBibleStore = create<BibleState>((set) => ({
   setBooks: (books) => set({ books }),
   setSearchResults: (searchResults) => set({ searchResults }),
   setSemanticResults: (semanticResults) => set({ semanticResults }),
-  selectVerse: (selectedVerse) => set({ selectedVerse }),
+  selectVerse: (selectedVerse) => {
+    set({ selectedVerse })
+    // A chosen verse takes the preview/live output back from any hymn override.
+    if (selectedVerse) useBroadcastStore.getState().setLiveOverride(null)
+  },
   setCurrentChapter: (currentChapter) => set({ currentChapter }),
   setCrossReferences: (crossReferences) => set({ crossReferences }),
   setPendingNavigation: (pendingNavigation) => set({ pendingNavigation }),
