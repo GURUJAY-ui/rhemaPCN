@@ -288,7 +288,8 @@ export function TranscriptPanel() {
         open={showKeyPrompt}
         onOpenChange={setShowKeyPrompt}
         service="Deepgram"
-        description="Live transcription needs a Deepgram API key. Add it in settings so the app can start listening."
+        description="Live transcription needs a Deepgram API key. Paste it below and it'll start listening right away."
+        onSaved={() => void startTranscription()}
       />
     </div>
   )
