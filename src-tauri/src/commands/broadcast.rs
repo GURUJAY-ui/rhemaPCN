@@ -154,7 +154,7 @@ pub fn close_broadcast_window(
 }
 
 #[tauri::command]
-pub fn start_ndi(
+pub async fn start_ndi(
     output_id: String,
     runtime: State<'_, Mutex<NdiRuntime>>,
     request: NdiStartRequest,
@@ -177,7 +177,7 @@ pub fn start_ndi(
 }
 
 #[tauri::command]
-pub fn stop_ndi(output_id: String, runtime: State<'_, Mutex<NdiRuntime>>) -> Result<(), String> {
+pub async fn stop_ndi(output_id: String, runtime: State<'_, Mutex<NdiRuntime>>) -> Result<(), String> {
     let mut runtime = runtime.lock().map_err(|e| e.to_string())?;
     runtime.stop(&output_id);
     Ok(())
@@ -192,7 +192,7 @@ pub struct NdiStatusResponse {
 }
 
 #[tauri::command]
-pub fn get_ndi_status(
+pub async fn get_ndi_status(
     output_id: String,
     runtime: State<'_, Mutex<NdiRuntime>>,
 ) -> Result<Option<NdiStatusResponse>, String> {
@@ -209,7 +209,7 @@ pub fn get_ndi_status(
 }
 
 #[tauri::command]
-pub fn push_ndi_frame(
+pub async fn push_ndi_frame(
     runtime: State<'_, Mutex<NdiRuntime>>,
     request: NdiFrameRequest,
 ) -> Result<(), String> {
