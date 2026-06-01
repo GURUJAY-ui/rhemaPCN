@@ -308,3 +308,136 @@ impl BibleDb {
             .collect())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Minimal schema + public-domain hymn fragments used purely as fixtures.
+    const SETUP_SQL: &str = "
+        CREATE TABLE hymnals (id INTEGER PRIMARY KEY, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, language TEXT NOT NULL DEFAULT 'en', license TEXT NOT NULL DEFAULT 'public-domain');
+        CREATE TABLE hymns (id INTEGER PRIMARY KEY, hymnal_id INTEGER NOT NULL, number INTEGER, title TEXT NOT NULL, author TEXT, tune TEXT, meter TEXT, category TEXT, themes TEXT, scriptures TEXT, source TEXT, UNIQUE(hymnal_id, number));
+        CREATE TABLE hymn_stanzas (id INTEGER PRIMARY KEY, hymn_id INTEGER NOT NULL, position INTEGER NOT NULL, kind TEXT NOT NULL DEFAULT 'verse', label TEXT, text TEXT NOT NULL, UNIQUE(hymn_id, position));
+        CREATE VIRTUAL TABLE hymns_fts USING fts5(hymn_id UNINDEXED, number UNINDEXED, title, lyrics, tokenize='unicode61');
+        INSERT INTO hymnals (id, slug, title) VALUES (1,'pcn','PCN Hymn Book'),(2,'cbh','Complete Book');
+        INSERT INTO hymns (id,hymnal_id,number,title,author,category) VALUES
+          (1,1,1,'Holy Holy Holy','Heber','Adoration'),
+          (2,1,22,'Praise to the Lord the Almighty','Neander','Adoration'),
+          (3,2,NULL,'Amazing Grace','Newton','Salvation');
+        INSERT INTO hymn_stanzas (hymn_id,position,kind,label,text) VALUES
+          (1,1,'verse','1','Holy holy holy casting down their golden crowns'),
+          (1,2,'verse','2','all the saints adore thee around the glassy sea'),
+          (2,1,'verse','1','Praise to the Lord the Almighty the King of creation'),
+          (3,1,'verse','1','Amazing grace how sweet the sound that saved a wretch');
+        INSERT INTO hymns_fts (hymn_id,number,title,lyrics)
+          SELECT h.id,h.number,h.title,
+                 (SELECT group_concat(s.text, char(10)) FROM hymn_stanzas s WHERE s.hymn_id=h.id)
+          FROM hymns h;
+    ";
+
+    fn test_db() -> BibleDb {
+        let db = BibleDb::open(std::path::Path::new(":memory:")).expect("open :memory:");
+        {
+            let conn = db.conn.lock().unwrap();
+            conn.execute_batch(SETUP_SQL).expect("setup sql");
+        }
+        db
+    }
+
+    #[test]
+    fn list_hymnals_returns_all() {
+        let db = test_db();
+        let hymnals = db.list_hymnals().unwrap();
+        assert_eq!(hymnals.len(), 2);
+        assert!(hymnals.iter().any(|h| h.slug == "pcn"));
+        assert!(hymnals.iter().any(|h| h.slug == "cbh"));
+    }
+
+    #[test]
+    fn list_hymns_orders_numbered_first_then_unnumbered_by_title() {
+        let db = test_db();
+        let all = db.list_hymns(None, 100).unwrap();
+        assert_eq!(all.len(), 3);
+        // numbered (1, then 22) come before the NULL-numbered "Amazing Grace"
+        assert_eq!(all[0].number, Some(1));
+        assert_eq!(all[1].number, Some(22));
+        assert_eq!(all[2].number, None);
+        assert_eq!(all[2].title, "Amazing Grace");
+    }
+
+    #[test]
+    fn list_hymns_filters_by_hymnal_slug() {
+        let db = test_db();
+        assert_eq!(db.list_hymns(Some("pcn"), 100).unwrap().len(), 2);
+        assert_eq!(db.list_hymns(Some("cbh"), 100).unwrap().len(), 1);
+        assert_eq!(db.list_hymns(Some("nope"), 100).unwrap().len(), 0);
+    }
+
+    #[test]
+    fn get_hymn_returns_detail_with_ordered_stanzas() {
+        let db = test_db();
+        let detail = db.get_hymn(1).unwrap().expect("hymn 1");
+        assert_eq!(detail.hymn.title, "Holy Holy Holy");
+        assert_eq!(detail.stanzas.len(), 2);
+        assert_eq!(detail.stanzas[0].position, 1);
+        assert_eq!(detail.stanzas[1].position, 2);
+    }
+
+    #[test]
+    fn get_hymn_missing_returns_none() {
+        let db = test_db();
+        assert!(db.get_hymn(999).unwrap().is_none());
+    }
+
+    #[test]
+    fn get_hymn_by_number_works_and_handles_missing() {
+        let db = test_db();
+        let detail = db.get_hymn_by_number("pcn", 22).unwrap().expect("pcn 22");
+        assert_eq!(detail.hymn.title, "Praise to the Lord the Almighty");
+        assert!(db.get_hymn_by_number("pcn", 999).unwrap().is_none());
+        assert!(db.get_hymn_by_number("cbh", 1).unwrap().is_none());
+    }
+
+    #[test]
+    fn search_hymns_matches_lyrics_and_title() {
+        let db = test_db();
+        let by_lyric = db.search_hymns("crowns", 10).unwrap();
+        assert_eq!(by_lyric.first().map(|h| h.id), Some(1));
+
+        let by_title = db.search_hymns("amazing", 10).unwrap();
+        assert_eq!(by_title.first().map(|h| h.id), Some(3));
+    }
+
+    #[test]
+    fn detect_hymn_ranks_correct_hymn_first() {
+        let db = test_db();
+        let matches = db
+            .detect_hymn("praise to the lord almighty king creation", 5)
+            .unwrap();
+        assert!(!matches.is_empty());
+        assert_eq!(matches[0].hymn.number, Some(22));
+        assert!(matches[0].confidence > 0.0);
+        assert!(matches[0].rank < 0.0); // bm25 ranks are negative
+    }
+
+    #[test]
+    fn detect_hymn_finds_unnumbered_hymn() {
+        let db = test_db();
+        let matches = db.detect_hymn("amazing grace sweet sound", 5).unwrap();
+        assert_eq!(matches.first().map(|m| m.hymn.id), Some(3));
+    }
+
+    #[test]
+    fn detect_hymn_ignores_stopword_only_input() {
+        let db = test_db();
+        // No significant words -> phrase won't match, AND query is empty -> no hits.
+        assert!(db.detect_hymn("the of and to", 5).unwrap().is_empty());
+    }
+
+    #[test]
+    fn detect_hymn_no_match_for_unrelated_multiword_speech() {
+        let db = test_db();
+        // Two significant words that don't co-occur in any hymn -> AND yields nothing.
+        assert!(db.detect_hymn("budget meeting schedule tuesday", 5).unwrap().is_empty());
+    }
+}
