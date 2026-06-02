@@ -231,8 +231,85 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
   },
 }
 
+// Roomy full-screen layout for hymns: transparent background (keys over
+// EasyWorship in OBS), large centred serif text with a strong shadow for
+// legibility, no per-line verse numbers, and a small reference below.
+const HYMN_FULLSCREEN: BroadcastTheme = {
+  ...baseTheme,
+  id: "builtin-hymn-fullscreen",
+  name: "Hymn Full-Screen",
+  background: {
+    type: "transparent",
+    color: "transparent",
+    gradient: null,
+    image: null,
+  },
+  textBox: {
+    enabled: false,
+    color: "#000000",
+    opacity: 0,
+    borderRadius: 0,
+    padding: 0,
+  },
+  verseText: {
+    fontFamily: "Source Serif 4 Variable",
+    fontSize: 60,
+    fontWeight: 500,
+    color: "#ffffff",
+    horizontalAlign: "center",
+    verticalAlign: "middle",
+    textTransform: "none",
+    textDecoration: "none",
+    lineHeight: 1.4,
+    letterSpacing: 0,
+    shadow: { color: "rgba(0,0,0,0.85)", blur: 14, x: 0, y: 3 },
+    outline: null,
+  },
+  verseNumbers: {
+    visible: false,
+    fontSize: 18,
+    color: "#ffffff",
+    superscript: true,
+  },
+  reference: {
+    fontFamily: "Geist Variable",
+    fontSize: 34,
+    fontWeight: 600,
+    color: "#fbbf24",
+    horizontalAlign: "center",
+    verticalAlign: "middle",
+    textTransform: "none",
+    textDecoration: "none",
+    uppercase: false,
+    letterSpacing: 1,
+    position: "below",
+  },
+  layout: {
+    anchor: "center",
+    offsetX: 0,
+    offsetY: 0,
+    padding: { top: 60, right: 80, bottom: 60, left: 80 },
+    textAlign: "center",
+    backgroundWidth: 100,
+    backgroundHeight: 100,
+    textAreaWidth: 88,
+    textAreaHeight: 85,
+    referenceGap: 28,
+  },
+  transition: {
+    type: "fade",
+    duration: 300,
+    easing: "ease-in-out",
+    direction: "up",
+  },
+}
+
 export const BUILTIN_THEMES: BroadcastTheme[] = [
   CLASSIC_DARK,
   MODERN_LIGHT,
   BROADCAST_OVERLAY,
+  HYMN_FULLSCREEN,
 ]
+
+/** Theme used automatically when projecting hymns (roomy full-screen layout). */
+export const HYMN_THEME_ID = "builtin-hymn-fullscreen"

@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { emitTo } from "@tauri-apps/api/event"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import type { BroadcastTheme, VerseRenderData } from "@/types"
-import { BUILTIN_THEMES } from "@/lib/builtin-themes"
+import { BUILTIN_THEMES, HYMN_THEME_ID } from "@/lib/builtin-themes"
 
 type SelectedElement = "verse" | "reference" | null
 
@@ -169,7 +169,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     })),
   syncBroadcastOutputFor: (outputId: string) => {
     const s = get()
-    const themeId = outputId === "alt" ? s.altActiveThemeId : s.activeThemeId
+    const baseThemeId = outputId === "alt" ? s.altActiveThemeId : s.activeThemeId
+    // A live hymn (override) projects with the roomy full-screen hymn theme;
+    // verses keep the operator's chosen theme (e.g. the lower-third overlay).
+    const themeId = s.liveOverride ? HYMN_THEME_ID : baseThemeId
     const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
     if (!theme) return

@@ -4,6 +4,7 @@ import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { useBibleStore, useBroadcastStore } from "@/stores"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
+import { HYMN_THEME_ID } from "@/lib/builtin-themes"
 
 export function PreviewPanel() {
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
@@ -25,9 +26,13 @@ export function PreviewPanel() {
   const themes = useBroadcastStore((s) => s.themes)
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
 
-  const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
-  const translation = translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
   const liveOverride = useBroadcastStore((s) => s.liveOverride)
+  const baseTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
+  // Preview a hymn with the full-screen hymn theme, matching the live output.
+  const activeTheme = liveOverride
+    ? (themes.find((t) => t.id === HYMN_THEME_ID) ?? baseTheme)
+    : baseTheme
+  const translation = translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
 
   // Show the hymn (or other) override when present, else the selected Bible verse.
   const verseData =

@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore, useBibleStore } from "@/stores"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
+import { HYMN_THEME_ID } from "@/lib/builtin-themes"
 
 export function LiveOutputPanel() {
   const isLive = useBroadcastStore((s) => s.isLive)
@@ -17,7 +18,11 @@ export function LiveOutputPanel() {
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
 
-  const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
+  const baseTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
+  // Hymns project with the roomy full-screen theme; verses keep the chosen theme.
+  const activeTheme = liveOverride
+    ? (themes.find((t) => t.id === HYMN_THEME_ID) ?? baseTheme)
+    : baseTheme
   const translation =
     translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
 
