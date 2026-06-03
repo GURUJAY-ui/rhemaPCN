@@ -62,3 +62,6 @@ ghs.json
 
 # GSD planning artifacts
 .planning/
+
+# Hymn source document (large binary; seed is generated from it via data/hymns/build-rch-seed.mjs)
+RCH PLUS completed  WORKING.docx
