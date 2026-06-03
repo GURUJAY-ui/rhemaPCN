@@ -26,7 +26,7 @@ export function TutorialTooltip({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
-        e.preventDefault()
+        e.preventDefault() 
         if (isLastStepRef.current) {
           controlsRef.current.skip("button_skip")
         } else {
