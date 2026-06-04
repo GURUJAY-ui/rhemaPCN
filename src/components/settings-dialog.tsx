@@ -310,6 +310,10 @@ function DisplayModeSection() {
     setAutoMode,
     confidenceThreshold,
     setConfidenceThreshold,
+    hymnFollowMode,
+    setHymnFollowMode,
+    hymnFollowResponsiveness,
+    setHymnFollowResponsiveness,
   } = useSettingsStore()
 
   const thresholdPercent = Math.round(confidenceThreshold * 100)
@@ -387,6 +391,75 @@ function DisplayModeSection() {
           </p>
         </div>
       )}
+
+      {/* Hymn projection */}
+      <div className="flex flex-col gap-3">
+        <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Hymn Projection
+        </label>
+        <RadioGroup
+          value={hymnFollowMode}
+          onValueChange={(v) => setHymnFollowMode(v as "off" | "slides" | "karaoke")}
+          className="gap-3"
+        >
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="slides" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Slides (follow)</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Detects the hymn from the singing and auto-advances through the stanzas
+                on the live output, one slide at a time.
+              </p>
+            </div>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="karaoke" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Karaoke (Spotify-style)</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Shows the full lyrics on the live output with the current line highlighted
+                and auto-scrolling as the choir sings (~1–2s follow lag).
+              </p>
+            </div>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+            <RadioGroupItem value="off" className="mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">Off</span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                No automatic hymn projection. Detected hymns still show in the Hymns panel.
+              </p>
+            </div>
+          </label>
+        </RadioGroup>
+
+        {hymnFollowMode !== "off" && (
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Follow Responsiveness
+            </label>
+            <Select
+              value={hymnFollowResponsiveness}
+              onValueChange={(v) =>
+                setHymnFollowResponsiveness(v as "relaxed" | "balanced" | "snappy")
+              }
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="relaxed">Relaxed (1.5s) — lowest CPU</SelectItem>
+                <SelectItem value="balanced">Balanced (0.9s)</SelectItem>
+                <SelectItem value="snappy">Snappy (0.5s) — most responsive</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[0.625rem] text-muted-foreground">
+              How often the singing is re-checked to advance the hymn. Snappier feels more
+              in-sync but uses more CPU and transcription lookups.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
