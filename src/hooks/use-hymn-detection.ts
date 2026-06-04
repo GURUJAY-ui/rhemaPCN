@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react"
 import { useTranscriptStore, useHymnStore } from "@/stores"
+import { useSettingsStore } from "@/stores/settings-store"
 import { hymnActions, type HymnSlide } from "@/hooks/use-hymns"
+import { bestIndex, nextIndex, pollIntervalFor } from "@/lib/hymn-follow"
 import type { HymnMatch } from "@/types"
 
 // Detection tuning.
-const POLL_MS = 1500 // how often to re-evaluate the rolling transcript
 const WINDOW_WORDS = 24 // size of the rolling lyric window fed to the matcher
-const MIN_WORDS = 6 // need at least this many words before guessing (avoids speech noise)
+const MIN_WORDS = 6 // need at least this many words before guessing
 const SHOW_CONFIDENCE = 0.3 // weaker matches are dropped from the candidate list
-const STABLE_POLLS = 2 // the same hymn must lead this many polls in a row to count
+const STABLE_POLLS = 2 // the same hymn must lead this many polls to count
 const AUTO_DISPLAY_CONFIDENCE = 0.45 // top match must beat this to auto-show
 
 /** Build a rolling window of the most recent transcript words. */
@@ -20,40 +21,26 @@ function recentTranscript(): string {
   return words.slice(-WINDOW_WORDS).join(" ")
 }
 
-/** Pick the slide whose words best overlap the heard lyrics. */
-function bestSlideIndex(slides: HymnSlide[], transcript: string): number {
-  const heard = new Set(
-    transcript.toLowerCase().replace(/[^a-z\s']/g, " ").split(/\s+/).filter((w) => w.length > 2)
-  )
-  if (heard.size === 0) return 0
-  let bestIdx = 0
-  let bestScore = -1
-  slides.forEach((s, i) => {
-    const words = s.text.toLowerCase().replace(/[^a-z\s']/g, " ").split(/\s+/)
-    const score = words.reduce((acc, w) => acc + (heard.has(w) ? 1 : 0), 0)
-    if (score > bestScore) {
-      bestScore = score
-      bestIdx = i
-    }
-  })
-  return bestIdx
-}
-
 /**
- * Continuously detect which hymn the choir is singing from the live transcript.
- * Updates the hymn store's `detections`, and — when `autoDisplay` is on and the
- * top match is confident — loads the hymn and pushes the best-matching stanza
- * to the live output.
+ * Continuously detect which hymn the choir is singing and, while follow mode is
+ * on, keep the live output tracking the singing: it loads the detected hymn,
+ * projects the best-matching stanza, and re-projects as later stanzas/choruses
+ * are sung — until the song ends (the last slide then stays on screen).
  *
  * Mount once (e.g. in App) so it runs for the whole session.
  */
 export function useHymnDetection() {
+  const followMode = useSettingsStore((s) => s.hymnFollowMode)
+  const responsiveness = useSettingsStore((s) => s.hymnFollowResponsiveness)
+
   const lastQueryRef = useRef("")
-  const lastShownRef = useRef<number | null>(null)
   const leadingIdRef = useRef<number | null>(null) // hymn currently leading
   const stableCountRef = useRef(0) // consecutive polls it has led
   const missCountRef = useRef(0) // consecutive polls with no candidate
   const runningRef = useRef(false)
+  // The hymn being followed + its built slides, and the last projected index.
+  const followRef = useRef<{ id: number; slides: HymnSlide[] } | null>(null)
+  const slideIdxRef = useRef(-1)
 
   useEffect(() => {
     const tick = async () => {
@@ -72,12 +59,15 @@ export function useHymnDetection() {
         const candidates = matches.filter((m) => m.confidence >= SHOW_CONFIDENCE)
         const top: HymnMatch | undefined = candidates[0]
 
-        // Nothing plausible — clear the banner after a couple of empty polls.
+        // Nothing plausible — clear the banner after a couple of empty polls and
+        // stop following (the last projected slide stays on the live output).
         if (!top) {
           if (++missCountRef.current >= STABLE_POLLS) {
             useHymnStore.getState().setDetections([])
             leadingIdRef.current = null
             stableCountRef.current = 0
+            followRef.current = null
+            slideIdxRef.current = -1
           }
           return
         }
@@ -93,21 +83,32 @@ export function useHymnDetection() {
 
         useHymnStore.getState().setDetections(candidates)
 
-        const { autoDisplay } = useHymnStore.getState()
-        if (
-          autoDisplay &&
-          top.confidence >= AUTO_DISPLAY_CONFIDENCE &&
-          top.id !== lastShownRef.current
-        ) {
+        if (followMode === "off" || top.confidence < AUTO_DISPLAY_CONFIDENCE) return
+
+        // New leading hymn: load it, cache slides, project the best stanza.
+        let follow = followRef.current
+        if (!follow || follow.id !== top.id) {
           const detail = await hymnActions.getHymn(top.id)
-          if (detail) {
-            const { linesPerSlide } = useHymnStore.getState()
-            const slides = hymnActions.buildSlides(detail, detail.stanzas, linesPerSlide)
-            const idx = bestSlideIndex(slides, transcript)
-            useHymnStore.getState().setSlideIndex(idx)
-            hymnActions.goLiveSlide(slides[idx])
-            lastShownRef.current = top.id
-          }
+          if (!detail) return
+          const { linesPerSlide } = useHymnStore.getState()
+          const slides = hymnActions.buildSlides(detail, detail.stanzas, linesPerSlide)
+          if (slides.length === 0) return
+          follow = { id: top.id, slides }
+          followRef.current = follow
+          const idx = bestIndex(slides.map((s) => s.text), transcript)
+          slideIdxRef.current = idx
+          useHymnStore.getState().setSlideIndex(idx)
+          hymnActions.goLiveSlide(slides[idx])
+          return
+        }
+
+        // Same hymn continues — follow the singing through the stanzas.
+        const texts = follow.slides.map((s) => s.text)
+        const next = nextIndex(texts, transcript, slideIdxRef.current)
+        if (next != null && follow.slides[next]) {
+          slideIdxRef.current = next
+          useHymnStore.getState().setSlideIndex(next)
+          hymnActions.goLiveSlide(follow.slides[next])
         }
       } catch (err) {
         console.warn("[hymn-detect]", err)
@@ -116,7 +117,7 @@ export function useHymnDetection() {
       }
     }
 
-    const id = setInterval(() => void tick(), POLL_MS)
+    const id = setInterval(() => void tick(), pollIntervalFor(responsiveness))
     return () => clearInterval(id)
-  }, [])
+  }, [followMode, responsiveness])
 }
