@@ -6,6 +6,9 @@ export interface VerseSegment {
 export interface VerseRenderData {
   reference: string
   segments: VerseSegment[]
+  /** When present, the live output renders a scrolling karaoke view instead of
+   *  a static slide. `lines` is the full ordered lyric; `currentLine` indexes it. */
+  karaoke?: { lines: string[]; currentLine: number }
 }
 
 export interface RenderOptions {
