@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react"
 import { useTranscriptStore, useHymnStore } from "@/stores"
 import { useSettingsStore } from "@/stores/settings-store"
-import { hymnActions, type HymnSlide } from "@/hooks/use-hymns"
-import { bestIndex, nextIndex, pollIntervalFor } from "@/lib/hymn-follow"
+import { hymnActions, hymnReference, type HymnSlide } from "@/hooks/use-hymns"
+import { bestIndex, nextIndex, flattenLines, pollIntervalFor } from "@/lib/hymn-follow"
 import type { HymnMatch } from "@/types"
 
 // Detection tuning.
@@ -23,9 +23,9 @@ function recentTranscript(): string {
 
 /**
  * Continuously detect which hymn the choir is singing and, while follow mode is
- * on, keep the live output tracking the singing: it loads the detected hymn,
- * projects the best-matching stanza, and re-projects as later stanzas/choruses
- * are sung — until the song ends (the last slide then stays on screen).
+ * on, keep the live output tracking the singing. In "slides" mode it advances
+ * through stanzas; in "karaoke" mode it pushes the full lyrics and advances the
+ * highlighted line. The song ending leaves the last view on screen.
  *
  * Mount once (e.g. in App) so it runs for the whole session.
  */
@@ -38,9 +38,15 @@ export function useHymnDetection() {
   const stableCountRef = useRef(0) // consecutive polls it has led
   const missCountRef = useRef(0) // consecutive polls with no candidate
   const runningRef = useRef(false)
-  // The hymn being followed + its built slides, and the last projected index.
-  const followRef = useRef<{ id: number; slides: HymnSlide[] } | null>(null)
+  // The hymn being followed + its built slides + flat lyric lines + label.
+  const followRef = useRef<{
+    id: number
+    slides: HymnSlide[]
+    lines: string[]
+    reference: string
+  } | null>(null)
   const slideIdxRef = useRef(-1)
+  const lineIdxRef = useRef(-1)
 
   useEffect(() => {
     const tick = async () => {
@@ -60,7 +66,7 @@ export function useHymnDetection() {
         const top: HymnMatch | undefined = candidates[0]
 
         // Nothing plausible — clear the banner after a couple of empty polls and
-        // stop following (the last projected slide stays on the live output).
+        // stop following (the last projected view stays on the live output).
         if (!top) {
           if (++missCountRef.current >= STABLE_POLLS) {
             useHymnStore.getState().setDetections([])
@@ -68,6 +74,7 @@ export function useHymnDetection() {
             stableCountRef.current = 0
             followRef.current = null
             slideIdxRef.current = -1
+            lineIdxRef.current = -1
           }
           return
         }
@@ -85,7 +92,7 @@ export function useHymnDetection() {
 
         if (followMode === "off" || top.confidence < AUTO_DISPLAY_CONFIDENCE) return
 
-        // New leading hymn: load it, cache slides, project the best stanza.
+        // New leading hymn: load it, cache slides + lines, project.
         let follow = followRef.current
         if (!follow || follow.id !== top.id) {
           const detail = await hymnActions.getHymn(top.id)
@@ -93,22 +100,38 @@ export function useHymnDetection() {
           const { linesPerSlide } = useHymnStore.getState()
           const slides = hymnActions.buildSlides(detail, detail.stanzas, linesPerSlide)
           if (slides.length === 0) return
-          follow = { id: top.id, slides }
+          const lines = flattenLines(detail.stanzas)
+          const reference = hymnReference(detail)
+          follow = { id: top.id, slides, lines, reference }
           followRef.current = follow
-          const idx = bestIndex(slides.map((s) => s.text), transcript)
-          slideIdxRef.current = idx
-          useHymnStore.getState().setSlideIndex(idx)
-          hymnActions.goLiveSlide(slides[idx])
+
+          if (followMode === "karaoke" && lines.length > 0) {
+            const idx = bestIndex(lines, transcript)
+            lineIdxRef.current = idx
+            hymnActions.goLiveKaraoke(reference, lines, idx)
+          } else {
+            const idx = bestIndex(slides.map((s) => s.text), transcript)
+            slideIdxRef.current = idx
+            useHymnStore.getState().setSlideIndex(idx)
+            hymnActions.goLiveSlide(slides[idx])
+          }
           return
         }
 
-        // Same hymn continues — follow the singing through the stanzas.
-        const texts = follow.slides.map((s) => s.text)
-        const next = nextIndex(texts, transcript, slideIdxRef.current)
-        if (next != null && follow.slides[next]) {
-          slideIdxRef.current = next
-          useHymnStore.getState().setSlideIndex(next)
-          hymnActions.goLiveSlide(follow.slides[next])
+        // Same hymn continues — follow the singing.
+        if (followMode === "karaoke" && follow.lines.length > 0) {
+          const next = nextIndex(follow.lines, transcript, lineIdxRef.current)
+          if (next != null) {
+            lineIdxRef.current = next
+            hymnActions.goLiveKaraoke(follow.reference, follow.lines, next)
+          }
+        } else {
+          const next = nextIndex(follow.slides.map((s) => s.text), transcript, slideIdxRef.current)
+          if (next != null && follow.slides[next]) {
+            slideIdxRef.current = next
+            useHymnStore.getState().setSlideIndex(next)
+            hymnActions.goLiveSlide(follow.slides[next])
+          }
         }
       } catch (err) {
         console.warn("[hymn-detect]", err)
@@ -124,6 +147,7 @@ export function useHymnDetection() {
       runningRef.current = false
       followRef.current = null
       slideIdxRef.current = -1
+      lineIdxRef.current = -1
       lastQueryRef.current = ""
       leadingIdRef.current = null
       stableCountRef.current = 0
