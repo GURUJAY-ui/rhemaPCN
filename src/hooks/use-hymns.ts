@@ -116,7 +116,6 @@ export function useHymns() {
   const slideIndex = useHymnStore((s) => s.slideIndex)
   const linesPerSlide = useHymnStore((s) => s.linesPerSlide)
   const detections = useHymnStore((s) => s.detections)
-  const autoDisplay = useHymnStore((s) => s.autoDisplay)
 
   return {
     hymnals,
@@ -127,12 +126,10 @@ export function useHymns() {
     slideIndex,
     linesPerSlide,
     detections,
-    autoDisplay,
     setQuery: useHymnStore((s) => s.setQuery),
     setSelected: useHymnStore((s) => s.setSelected),
     setSlideIndex: useHymnStore((s) => s.setSlideIndex),
     setLinesPerSlide: useHymnStore((s) => s.setLinesPerSlide),
-    setAutoDisplay: useHymnStore((s) => s.setAutoDisplay),
     ...hymnActions,
   }
 }
