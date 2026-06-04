@@ -88,6 +88,30 @@ pub fn detect_hymn(
         .bible_db
         .as_ref()
         .ok_or_else(|| "Bible database not loaded".to_string())?;
-    db.detect_hymn(&transcript, limit.unwrap_or(5))
-        .map_err(|e| e.to_string())
+    let matches = db
+        .detect_hymn(&transcript, limit.unwrap_or(5))
+        .map_err(|e| e.to_string())?;
+
+    if matches.is_empty() {
+        log::info!("[HYMN-DETECT] {transcript:?} -> no candidates");
+    } else {
+        let summary: Vec<String> = matches
+            .iter()
+            .take(3)
+            .map(|m| {
+                let num = m
+                    .hymn
+                    .number
+                    .map_or_else(|| "—".to_string(), |n| n.to_string());
+                format!("#{num} {} ({:.0}%)", m.hymn.title, m.confidence * 100.0)
+            })
+            .collect();
+        log::info!(
+            "[HYMN-DETECT] {transcript:?} -> {} candidate(s): {}",
+            matches.len(),
+            summary.join(", ")
+        );
+    }
+
+    Ok(matches)
 }
