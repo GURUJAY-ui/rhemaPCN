@@ -118,6 +118,16 @@ export function useHymnDetection() {
     }
 
     const id = setInterval(() => void tick(), pollIntervalFor(responsiveness))
-    return () => clearInterval(id)
+    return () => {
+      clearInterval(id)
+      // Reset per-session state so a settings change restarts the loop cleanly.
+      runningRef.current = false
+      followRef.current = null
+      slideIdxRef.current = -1
+      lastQueryRef.current = ""
+      leadingIdRef.current = null
+      stableCountRef.current = 0
+      missCountRef.current = 0
+    }
   }, [followMode, responsiveness])
 }
