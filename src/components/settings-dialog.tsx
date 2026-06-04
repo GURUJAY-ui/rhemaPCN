@@ -407,8 +407,8 @@ function DisplayModeSection() {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-foreground">Slides (follow)</span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Detects the hymn from the singing and auto-advances through the stanzas
-                on the live output, one slide at a time.
+                Cue a hymn (search + click, or tap a detection suggestion) and the live
+                output auto-advances through its stanzas as it&rsquo;s sung, one slide at a time.
               </p>
             </div>
           </label>
@@ -417,8 +417,8 @@ function DisplayModeSection() {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-foreground">Karaoke (Spotify-style)</span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Shows the full lyrics on the live output with the current line highlighted
-                and auto-scrolling as the choir sings (~1–2s follow lag).
+                Cue a hymn and the live output shows its full lyrics with the current line
+                highlighted and auto-scrolling as it&rsquo;s sung (~1–2s follow lag).
               </p>
             </div>
           </label>

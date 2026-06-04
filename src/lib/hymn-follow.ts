@@ -101,3 +101,29 @@ export function flattenLines(stanzas: readonly HymnStanza[]): string[] {
   }
   return lines
 }
+
+/** A transcript segment with a wall-clock timestamp (ms). */
+export interface TimedSegment {
+  text: string
+  timestamp: number
+}
+
+/**
+ * Build the rolling lyric window fed to the matcher: only segments newer than
+ * `maxAgeMs` (so stale speech ages out instead of lingering for minutes) plus
+ * the live partial, capped to the last `windowWords` words.
+ */
+export function recentLyricWindow(
+  segments: readonly TimedSegment[],
+  currentPartial: string,
+  now: number,
+  maxAgeMs = 20000,
+  windowWords = 24,
+): string {
+  const fresh = segments
+    .filter((s) => now - s.timestamp <= maxAgeMs)
+    .map((s) => s.text)
+  const text = `${fresh.join(" ")} ${currentPartial}`.trim()
+  if (!text) return ""
+  return text.split(/\s+/).slice(-windowWords).join(" ")
+}

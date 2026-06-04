@@ -3,6 +3,7 @@ import {
   bestIndex,
   nextIndex,
   flattenLines,
+  recentLyricWindow,
   pollIntervalFor,
   MIN_OVERLAP,
 } from "./hymn-follow"
@@ -67,5 +68,36 @@ describe("flattenLines", () => {
 describe("MIN_OVERLAP", () => {
   it("is 2", () => {
     expect(MIN_OVERLAP).toBe(2)
+  })
+})
+
+describe("recentLyricWindow", () => {
+  const now = 100_000
+
+  it("drops segments older than maxAgeMs (stale speech ages out)", () => {
+    const segments = [
+      { text: "old garbage words", timestamp: 0 }, // 100s old -> dropped
+      { text: "great is thy", timestamp: now - 1000 }, // fresh
+    ]
+    expect(recentLyricWindow(segments, "faithfulness", now, 20_000)).toBe(
+      "great is thy faithfulness",
+    )
+  })
+
+  it("includes the live partial after the fresh segments", () => {
+    const segments = [{ text: "morning by morning", timestamp: now - 500 }]
+    expect(recentLyricWindow(segments, "new mercies I see", now)).toBe(
+      "morning by morning new mercies I see",
+    )
+  })
+
+  it("caps the window to the last windowWords words", () => {
+    const segments = [{ text: "a b c d e", timestamp: now }]
+    expect(recentLyricWindow(segments, "f g", now, 20_000, 4)).toBe("d e f g")
+  })
+
+  it("returns empty string when nothing is fresh", () => {
+    const segments = [{ text: "ancient", timestamp: 0 }]
+    expect(recentLyricWindow(segments, "", now, 20_000)).toBe("")
   })
 })
