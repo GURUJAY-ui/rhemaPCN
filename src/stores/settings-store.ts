@@ -44,7 +44,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   onboardingComplete: false,
   sttProvider: "deepgram",
   hymnFollowMode: "slides",
-  hymnFollowResponsiveness: "balanced",
+  hymnFollowResponsiveness: "snappy",
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),

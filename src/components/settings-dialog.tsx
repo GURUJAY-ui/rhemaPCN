@@ -448,9 +448,9 @@ function DisplayModeSection() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="relaxed">Relaxed (1.5s) — lowest CPU</SelectItem>
-                <SelectItem value="balanced">Balanced (0.9s)</SelectItem>
-                <SelectItem value="snappy">Snappy (0.5s) — most responsive</SelectItem>
+                <SelectItem value="relaxed">Relaxed (1.2s) — lowest CPU</SelectItem>
+                <SelectItem value="balanced">Balanced (0.7s)</SelectItem>
+                <SelectItem value="snappy">Snappy (0.35s) — most responsive</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[0.625rem] text-muted-foreground">

@@ -11,12 +11,12 @@ export type FollowResponsiveness = "relaxed" | "balanced" | "snappy"
 export function pollIntervalFor(r: FollowResponsiveness): number {
   switch (r) {
     case "relaxed":
-      return 1500
+      return 1200
     case "snappy":
-      return 500
+      return 350
     case "balanced":
     default:
-      return 900
+      return 700
   }
 }
 

@@ -13,7 +13,7 @@ import type { HymnDetail } from "@/types"
 import type { LinesPerSlide } from "@/stores/hymn-store"
 
 // Tuning.
-const MIN_WORDS = 4 // need at least this many recent words before matching
+const MIN_WORDS = 3 // need at least this many recent words before matching
 const SHOW_CONFIDENCE = 0.3 // weaker matches are dropped from the suggestion banner
 const MISS_CLEARS = 2 // empty polls before the suggestion banner is cleared
 

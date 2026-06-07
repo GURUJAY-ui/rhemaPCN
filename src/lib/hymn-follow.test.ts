@@ -15,9 +15,9 @@ const stanza = (over: Partial<HymnStanza>): HymnStanza => ({
 
 describe("pollIntervalFor", () => {
   it("maps responsiveness to ms", () => {
-    expect(pollIntervalFor("relaxed")).toBe(1500)
-    expect(pollIntervalFor("balanced")).toBe(900)
-    expect(pollIntervalFor("snappy")).toBe(500)
+    expect(pollIntervalFor("relaxed")).toBe(1200)
+    expect(pollIntervalFor("balanced")).toBe(700)
+    expect(pollIntervalFor("snappy")).toBe(350)
   })
 })
 
