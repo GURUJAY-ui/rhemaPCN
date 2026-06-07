@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { useTranscriptStore, useHymnStore } from "@/stores"
 import { useSettingsStore } from "@/stores/settings-store"
 import { hymnActions, hymnReference, type HymnSlide } from "@/hooks/use-hymns"
+import { transcriptionActions } from "@/hooks/use-transcription"
 import {
   bestIndex,
   nextIndex,
@@ -99,6 +100,16 @@ export function useHymnDetection() {
       hymnActions.goLiveSlide(cache.slides[idx])
     }
   }, [selectedId, followMode, linesPerSlide])
+
+  // When the cued hymn changes while transcribing, re-prime the recognizer with
+  // that hymn's vocabulary (a guarded stream restart). Debounced so flipping
+  // through hymns doesn't thrash the connection.
+  useEffect(() => {
+    if (followMode === "off" || selectedId == null) return
+    if (!useTranscriptStore.getState().isTranscribing) return
+    const t = setTimeout(() => void transcriptionActions.reprime(), 700)
+    return () => clearTimeout(t)
+  }, [selectedId, followMode])
 
   // Poll the live transcript: refresh the (non-committal) suggestion banner and,
   // when a hymn is cued, follow the singing through it.

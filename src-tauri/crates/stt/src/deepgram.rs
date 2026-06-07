@@ -65,6 +65,9 @@ impl DeepgramClient {
 
             // Deepgram Nova-3 keyword boosting: uses `keyterm` (not `keywords`).
             // Each keyterm is a separate query param. Max 100 per request.
+            // When the config carries keyterms (the cued hymn's words), prime with
+            // those so the expected lyrics are recognized accurately; otherwise
+            // fall back to the general Bible/sermon vocabulary.
             let core_terms = vec![
                 "Jesus".to_string(),
                 "Christ".to_string(),
@@ -72,12 +75,17 @@ impl DeepgramClient {
                 "Lord".to_string(),
                 "Holy Spirit".to_string(),
             ];
-            let bible_terms = bible_keyterms();
+            let primed_for_hymn = !self.config.keyterms.is_empty();
+            let domain_terms = if primed_for_hymn {
+                self.config.keyterms.clone()
+            } else {
+                bible_keyterms()
+            };
 
-            // Deduplicate: core terms first, then bible_keyterms(), capped at 100.
+            // Deduplicate: core terms first, then domain terms, capped at 100.
             let mut seen = std::collections::HashSet::new();
             let mut all_keyterms: Vec<String> = Vec::new();
-            for term in core_terms.into_iter().chain(bible_terms.into_iter()) {
+            for term in core_terms.into_iter().chain(domain_terms.into_iter()) {
                 if seen.insert(term.clone()) {
                     all_keyterms.push(term);
                 }
@@ -90,8 +98,9 @@ impl DeepgramClient {
                 q.append_pair("keyterm", term);
             }
             log::info!(
-                "Deepgram keyterm boosting: {} keyterms added",
-                all_keyterms.len()
+                "Deepgram keyterm boosting: {} keyterms added ({})",
+                all_keyterms.len(),
+                if primed_for_hymn { "hymn-primed" } else { "bible" }
             );
         }
 

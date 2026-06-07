@@ -35,6 +35,10 @@ pub struct SttConfig {
     pub sample_rate: u32,
     pub encoding: String,
     pub language: Option<String>,
+    /// Keyterm boosting vocabulary. When non-empty (e.g. the cued hymn's words),
+    /// it primes the recognizer with these terms instead of the default Bible
+    /// vocabulary, sharply improving recognition of the expected lyrics.
+    pub keyterms: Vec<String>,
 }
 
 impl Default for SttConfig {
@@ -45,6 +49,7 @@ impl Default for SttConfig {
             sample_rate: 16000,
             encoding: "linear16".to_string(),
             language: None,
+            keyterms: Vec::new(),
         }
     }
 }

@@ -4,6 +4,7 @@ import {
   nextIndex,
   flattenLines,
   recentLyricWindow,
+  hymnKeyterms,
   pollIntervalFor,
   MIN_OVERLAP,
 } from "./hymn-follow"
@@ -68,6 +69,39 @@ describe("flattenLines", () => {
 describe("MIN_OVERLAP", () => {
   it("is 2", () => {
     expect(MIN_OVERLAP).toBe(2)
+  })
+})
+
+describe("hymnKeyterms", () => {
+  const detail = {
+    title: "Great Is Thy Faithfulness",
+    stanzas: [
+      { text: "Great is Thy faithfulness, O God my Father\nThere is no shadow of turning" },
+      { text: "Morning by morning new mercies I see" },
+    ],
+  }
+
+  it("extracts distinctive content words, lowercased and de-duplicated", () => {
+    const terms = hymnKeyterms(detail)
+    expect(terms).toContain("faithfulness")
+    expect(terms).toContain("father")
+    expect(terms).toContain("mercies")
+    // de-duplicated: "great" appears in title and verse 1 but only once
+    expect(terms.filter((t) => t === "great")).toHaveLength(1)
+  })
+
+  it("skips short words and stop words", () => {
+    const terms = hymnKeyterms(detail)
+    expect(terms).not.toContain("is") // short
+    expect(terms).not.toContain("thy") // short
+    expect(terms).not.toContain("the") // stop word
+    expect(terms).not.toContain("there") // stop word
+    expect(terms.every((t) => t.length >= 4)).toBe(true)
+  })
+
+  it("caps the number of terms", () => {
+    const big = { title: "x", stanzas: [{ text: "alpha bravo charlie delta echo foxtrot golf" }] }
+    expect(hymnKeyterms(big, 3)).toEqual(["alpha", "bravo", "charlie"])
   })
 })
 

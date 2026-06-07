@@ -102,6 +102,39 @@ export function flattenLines(stanzas: readonly HymnStanza[]): string[] {
   return lines
 }
 
+// Common words worth nothing as recognition hints — skipped when priming.
+const KEYTERM_STOP = new Set([
+  "the", "and", "that", "this", "with", "from", "they", "them", "their", "have",
+  "will", "shall", "unto", "thee", "thou", "thine", "your", "yours", "what",
+  "when", "then", "than", "there", "here", "were", "was", "are", "for", "but",
+  "all", "our", "his", "her", "him", "she", "you", "not", "who", "which",
+])
+
+/**
+ * Distinctive words from a hymn (title + lyrics) to prime the speech recognizer
+ * with — so the expected lyrics are transcribed accurately. Lowercased content
+ * words (length >= 4, non-stop), de-duplicated in first-seen order, capped.
+ */
+export function hymnKeyterms(
+  detail: { title: string; stanzas: readonly { text: string }[] },
+  max = 60,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const consider = (raw: string) => {
+    const w = raw.toLowerCase().replace(/[^a-z']/g, "")
+    if (w.length >= 4 && !KEYTERM_STOP.has(w) && !seen.has(w)) {
+      seen.add(w)
+      out.push(w)
+    }
+  }
+  for (const word of detail.title.split(/\s+/)) consider(word)
+  for (const stanza of detail.stanzas) {
+    for (const word of stanza.text.split(/\s+/)) consider(word)
+  }
+  return out.slice(0, max)
+}
+
 /** A transcript segment with a wall-clock timestamp (ms). */
 export interface TimedSegment {
   text: string
