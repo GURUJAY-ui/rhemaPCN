@@ -2,7 +2,37 @@
 
 **Date:** 2026-06-04
 **Branch:** `feat/hymn-follow-karaoke`
-**Status:** Approved design, pending implementation plan
+**Status:** Shipped — see "Implementation pivot" below for how the design changed during live testing.
+
+## Implementation pivot (2026-06-07)
+
+Live testing changed the approach. The original plan auto-detected *which* hymn
+was being sung (1-of-881) from the transcript and auto-projected it. In practice
+that was unreliable and unsafe:
+
+- Speech-to-text transcribes singing poorly (garbled lyrics → no match).
+- Loosening the matcher to compensate made ordinary speech false-fire hymns
+  (common words like "morning"/"see" score ~0.99 against the refrain), which
+  would project hymns during the sermon.
+
+What actually shipped instead:
+
+1. **Follow the operator-cued hymn, not blind detection.** The operator selects
+   a hymn (search + click, or tap a detection *suggestion*); the engine then
+   tracks the singing **within that one hymn** — a robust 1-of-~20-lines match
+   that ignores STT noise (garbage words aren't in the hymn) and never fires
+   during the sermon. Blind `detect_hymn` is kept only as a non-committal
+   suggestion banner.
+2. **Keyterm priming.** When a hymn is cued, Deepgram is primed with that hymn's
+   distinctive vocabulary (`SttConfig.keyterms`) instead of the default Bible
+   terms, so its lyrics transcribe accurately → tighter following. Changing the
+   cued hymn re-primes via a guarded stream restart.
+3. **Window freshness + latency tuning.** A time-based transcript window
+   (`recentLyricWindow`) ages out stale speech; poll cadence tightened
+   (snappy default) for responsiveness.
+
+Components A (slide-follow) and B (karaoke render + scroll/NDI pump) shipped as
+designed below; only the *trigger* changed from auto-detect to operator-cue.
 
 ## Problem
 
