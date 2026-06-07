@@ -95,6 +95,18 @@ function goLiveSlide(slide: HymnSlide) {
   bs.setLive(true)
 }
 
+/** Push a scrolling karaoke view (full lyrics + current line) to the live output. */
+function goLiveKaraoke(reference: string, lines: string[], currentLine: number) {
+  const bs = useBroadcastStore.getState()
+  bs.setLiveOverride({
+    reference,
+    // Fallback content for non-karaoke renderers (in-app preview): the current line.
+    segments: [{ text: lines[currentLine] ?? "" }],
+    karaoke: { lines, currentLine },
+  })
+  bs.setLive(true)
+}
+
 export const hymnActions = {
   loadHymnals,
   loadHymns,
@@ -103,6 +115,7 @@ export const hymnActions = {
   searchHymns,
   detectHymn,
   goLiveSlide,
+  goLiveKaraoke,
   buildSlides,
   hymnReference,
 }
@@ -116,7 +129,6 @@ export function useHymns() {
   const slideIndex = useHymnStore((s) => s.slideIndex)
   const linesPerSlide = useHymnStore((s) => s.linesPerSlide)
   const detections = useHymnStore((s) => s.detections)
-  const autoDisplay = useHymnStore((s) => s.autoDisplay)
 
   return {
     hymnals,
@@ -127,12 +139,10 @@ export function useHymns() {
     slideIndex,
     linesPerSlide,
     detections,
-    autoDisplay,
     setQuery: useHymnStore((s) => s.setQuery),
     setSelected: useHymnStore((s) => s.setSelected),
     setSlideIndex: useHymnStore((s) => s.setSlideIndex),
     setLinesPerSlide: useHymnStore((s) => s.setLinesPerSlide),
-    setAutoDisplay: useHymnStore((s) => s.setAutoDisplay),
     ...hymnActions,
   }
 }

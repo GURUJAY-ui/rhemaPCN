@@ -27,16 +27,8 @@ describe("hymn-store", () => {
       slideIndex: 5,
       linesPerSlide: "stanza",
       detections: [],
-      autoDisplay: true,
       query: "",
     })
-  })
-
-  it("auto-display is on by default", () => {
-    // Fresh module default (not the beforeEach reset) — verify the shipped default.
-    const fresh = useHymnStore.getInitialState?.() as { autoDisplay?: boolean } | undefined
-    // getInitialState may be unavailable; assert via a known-good reset instead.
-    expect(fresh?.autoDisplay ?? true).toBe(true)
   })
 
   it("setSelected stores the hymn and resets slideIndex to 0", () => {
@@ -55,11 +47,6 @@ describe("hymn-store", () => {
   it("setSlideIndex updates the index", () => {
     useHymnStore.getState().setSlideIndex(2)
     expect(useHymnStore.getState().slideIndex).toBe(2)
-  })
-
-  it("setAutoDisplay toggles", () => {
-    useHymnStore.getState().setAutoDisplay(false)
-    expect(useHymnStore.getState().autoDisplay).toBe(false)
   })
 
   it("setDetections replaces the candidate list", () => {

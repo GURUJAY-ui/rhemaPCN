@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core"
 import { toast } from "sonner"
 import { useSettingsStore } from "@/stores/settings-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
+import { useHymnStore } from "@/stores/hymn-store"
+import { hymnKeyterms } from "@/lib/hymn-follow"
 import { useTauriEvent } from "./use-tauri-event"
 
 interface TranscriptPartialPayload {
@@ -29,6 +31,11 @@ export const transcriptionActions = {
     transcript.setConnectionStatus("connecting")
 
     const settings = useSettingsStore.getState()
+    // Prime the recognizer with the cued hymn's vocabulary so its lyrics are
+    // transcribed accurately (only when follow mode is on and a hymn is cued).
+    const selected = useHymnStore.getState().selected
+    const keyterms =
+      settings.hymnFollowMode !== "off" && selected ? hymnKeyterms(selected) : undefined
     try {
       await invoke("start_transcription", {
         apiKey:
@@ -38,6 +45,7 @@ export const transcriptionActions = {
         deviceId: settings.audioDeviceId,
         gain: settings.gain,
         provider: settings.sttProvider,
+        keyterms,
       })
       transcript.setTranscribing(true)
     } catch (e) {
@@ -63,6 +71,19 @@ export const transcriptionActions = {
     transcript.setTranscribing(false)
     transcript.setPartial("")
     transcript.setConnectionStatus("disconnected")
+  },
+
+  /**
+   * Restart the stream so it re-primes with the currently-cued hymn's keyterms.
+   * Only acts while transcribing; the brief (~0.5s) gap is acceptable when the
+   * operator changes the cued hymn between songs.
+   */
+  async reprime(): Promise<void> {
+    if (!useTranscriptStore.getState().isTranscribing) return
+    await transcriptionActions.stop()
+    // Let the previous capture/provider threads release the audio device.
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    await transcriptionActions.start()
   },
 }
 

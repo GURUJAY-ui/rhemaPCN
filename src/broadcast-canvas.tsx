@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
+import { renderKaraoke, karaokeTargetScrollY } from "@/lib/karaoke-renderer"
 import { OUTPUT_ID, uint8ToBase64 } from "@/lib/broadcast-utils"
 import type { BroadcastTheme, VerseRenderData } from "@/types/broadcast"
 import type { NdiConfigEventPayload, NdiFrameRequest } from "@/types"
@@ -25,6 +26,8 @@ export function BroadcastCanvas() {
   const ndiCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastPushRef = useRef(0)
   const pushingRef = useRef(false)
+  const scrollYRef = useRef(0) // eased karaoke scroll offset
+  const rafRef = useRef<number | null>(null) // active animation-frame id
 
   const logDebug = useCallback((message: string, meta?: unknown) => {
     if (!import.meta.env.DEV) return
@@ -51,6 +54,12 @@ export function BroadcastCanvas() {
     const { theme, verse } = data
     canvas.width = theme.resolution.width
     canvas.height = theme.resolution.height
+
+    if (verse?.karaoke) {
+      renderKaraoke(ctx, theme, verse.karaoke, scrollYRef.current)
+      return
+    }
+
     const result = renderVerse(ctx, theme, verse, {
       scale: 1,
       imageCache: imageCacheRef.current,
@@ -140,6 +149,48 @@ export function BroadcastCanvas() {
     setTimeout(() => void pushNdiFrame(), 150)
     setTimeout(() => void pushNdiFrame(), 300)
   }, [pushNdiFrame])
+
+  // While a karaoke payload is live, ease the scroll toward the current line and
+  // push NDI frames continuously; otherwise idle (event-driven path handles it).
+  useEffect(() => {
+    let lastNdi = 0
+
+    const animate = (now: number) => {
+      const data = latestData.current
+      const k = data?.verse?.karaoke
+      if (!k) {
+        rafRef.current = null
+        return
+      }
+      const target = karaokeTargetScrollY(data!.theme, k.currentLine)
+      // Exponential ease toward target; snap when close to avoid jitter.
+      const delta = target - scrollYRef.current
+      scrollYRef.current = Math.abs(delta) < 0.5 ? target : scrollYRef.current + delta * 0.15
+      draw()
+
+      const fps = ndiConfigRef.current.active ? ndiConfigRef.current.fps || 24 : 30
+      if (now - lastNdi >= 1000 / fps) {
+        lastNdi = now
+        if (ndiConfigRef.current.active) void pushNdiFrame()
+      }
+      rafRef.current = requestAnimationFrame(animate)
+    }
+
+    const ensureRunning = () => {
+      if (rafRef.current == null) rafRef.current = requestAnimationFrame(animate)
+    }
+
+    const currentWindow = getCurrentWebviewWindow()
+    const unlisten = currentWindow.listen<BroadcastPayload>("broadcast:verse-update", (event) => {
+      if (event.payload.verse?.karaoke) ensureRunning()
+    })
+
+    return () => {
+      unlisten.then((fn) => fn())
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+  }, [draw, pushNdiFrame])
 
   useEffect(() => {
     const canvas = canvasRef.current

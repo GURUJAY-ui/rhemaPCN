@@ -42,6 +42,7 @@ pub async fn start_transcription(
     device_id: Option<String>,
     gain: Option<f32>,
     provider: Option<String>,
+    keyterms: Option<Vec<String>>,
 ) -> Result<(), String> {
     // ── 1. Guard: already running? ──────────────────────────────────────
     let (stt_active, audio_active) = {
@@ -142,6 +143,7 @@ pub async fn start_transcription(
                 sample_rate: 16_000,
                 encoding: "linear16".to_string(),
                 language: None,
+                keyterms: keyterms.unwrap_or_default(),
             };
 
             Box::new(DeepgramClient::new(stt_config))

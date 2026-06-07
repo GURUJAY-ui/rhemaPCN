@@ -17,8 +17,6 @@ interface HymnState {
 
   /** Live detection candidates from the choir's singing (ranked). */
   detections: HymnMatch[]
-  /** Auto-display the top detection on the live output when confident. */
-  autoDisplay: boolean
 
   setHymnals: (h: Hymnal[]) => void
   setHymns: (h: Hymn[]) => void
@@ -28,7 +26,6 @@ interface HymnState {
   setSlideIndex: (i: number) => void
   setLinesPerSlide: (n: LinesPerSlide) => void
   setDetections: (d: HymnMatch[]) => void
-  setAutoDisplay: (v: boolean) => void
 }
 
 export const useHymnStore = create<HymnState>((set) => ({
@@ -40,8 +37,6 @@ export const useHymnStore = create<HymnState>((set) => ({
   slideIndex: 0,
   linesPerSlide: "stanza",
   detections: [],
-  // On by default: as the choir sings, the detected hymn auto-projects.
-  autoDisplay: true,
 
   setHymnals: (hymnals) => set({ hymnals }),
   setHymns: (hymns) => set({ hymns }),
@@ -51,5 +46,4 @@ export const useHymnStore = create<HymnState>((set) => ({
   setSlideIndex: (slideIndex) => set({ slideIndex }),
   setLinesPerSlide: (linesPerSlide) => set({ linesPerSlide, slideIndex: 0 }),
   setDetections: (detections) => set({ detections }),
-  setAutoDisplay: (autoDisplay) => set({ autoDisplay }),
 }))

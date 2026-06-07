@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
+import type { HymnFollowMode, FollowResponsiveness } from "@/lib/hymn-follow"
 
 type SttProvider = "deepgram" | "whisper"
 
@@ -14,6 +15,8 @@ interface SettingsState {
   cooldownMs: number
   onboardingComplete: boolean
   sttProvider: SttProvider
+  hymnFollowMode: HymnFollowMode
+  hymnFollowResponsiveness: FollowResponsiveness
 
   setDeepgramApiKey: (key: string | null) => void
   setOpenaiApiKey: (key: string | null) => void
@@ -25,6 +28,8 @@ interface SettingsState {
   setCooldownMs: (ms: number) => void
   setOnboardingComplete: (complete: boolean) => void
   setSttProvider: (provider: SttProvider) => void
+  setHymnFollowMode: (mode: HymnFollowMode) => void
+  setHymnFollowResponsiveness: (r: FollowResponsiveness) => void
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -38,6 +43,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   cooldownMs: 2500,
   onboardingComplete: false,
   sttProvider: "deepgram",
+  hymnFollowMode: "slides",
+  hymnFollowResponsiveness: "snappy",
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
@@ -49,6 +56,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCooldownMs: (cooldownMs) => set({ cooldownMs }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
   setSttProvider: (sttProvider) => set({ sttProvider }),
+  setHymnFollowMode: (hymnFollowMode) => set({ hymnFollowMode }),
+  setHymnFollowResponsiveness: (hymnFollowResponsiveness) => set({ hymnFollowResponsiveness }),
 }))
 
 const PERSISTED_KEYS = [
@@ -62,6 +71,8 @@ const PERSISTED_KEYS = [
   "cooldownMs",
   "onboardingComplete",
   "sttProvider",
+  "hymnFollowMode",
+  "hymnFollowResponsiveness",
 ] as const satisfies readonly (keyof SettingsState)[]
 
 type PersistedKey = (typeof PERSISTED_KEYS)[number]

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useHymns, hymnActions, hymnReference } from "@/hooks/use-hymns"
+import { useSettingsStore } from "@/stores/settings-store"
 import type { LinesPerSlide } from "@/stores/hymn-store"
 import type { Hymn } from "@/types"
 
@@ -64,12 +65,20 @@ export function HymnsPanel() {
     slideIndex,
     linesPerSlide,
     detections,
-    autoDisplay,
     setQuery,
     setSlideIndex,
     setLinesPerSlide,
-    setAutoDisplay,
   } = useHymns()
+
+  const hymnFollowMode = useSettingsStore((s) => s.hymnFollowMode)
+  const setHymnFollowMode = useSettingsStore((s) => s.setHymnFollowMode)
+  // Remember the last non-off mode so toggling back on restores Slides/Karaoke.
+  const lastFollowModeRef = useRef<"slides" | "karaoke">(
+    hymnFollowMode === "karaoke" ? "karaoke" : "slides",
+  )
+  useEffect(() => {
+    if (hymnFollowMode !== "off") lastFollowModeRef.current = hymnFollowMode
+  }, [hymnFollowMode])
 
   const [loaded, setLoaded] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -107,8 +116,13 @@ export function HymnsPanel() {
     >
       <PanelHeader title="Hymns" icon={<MusicIcon className="size-3.5" />}>
         <label className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-wide text-muted-foreground">
-          Auto-display
-          <Switch checked={autoDisplay} onCheckedChange={setAutoDisplay} />
+          Follow
+          <Switch
+            checked={hymnFollowMode !== "off"}
+            onCheckedChange={(on) =>
+              setHymnFollowMode(on ? lastFollowModeRef.current : "off")
+            }
+          />
         </label>
       </PanelHeader>
 
