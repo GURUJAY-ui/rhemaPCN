@@ -15,6 +15,7 @@
     "download:bible-data": "bun run data/download-sources.ts",
     "build:bible": "bun run data/build-bible-db.ts",
     "build:hymns": "bun run data/build-hymns.ts",
+    "build:db": "bun run download:bible-data && bun run build:bible && bun run build:hymns",
     "scrape:hymns": "bun run data/scrape-pcn-hymns.ts",
     "download:model": "bun run data/download-model.ts",
     "export:verses": "bun run data/compute-embeddings.ts",

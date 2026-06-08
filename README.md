@@ -171,6 +171,20 @@ bun run export:verses                # Export verses to JSON
 python3 data/precompute-embeddings.py  # Precompute embeddings (GPU or ONNX fallback)
 ```
 
+#### Rebuilding just the database
+
+`data/rhema.db` is **gitignored** and built locally. To rebuild it (open-source
+Bible + the RCH hymnal) in one command:
+
+```bash
+bun run build:db        # download:bible-data → build:bible → build:hymns
+```
+
+⚠️ `build:bible` **deletes and rebuilds** `data/rhema.db`, so don't run this over a
+DB you want to keep. For the full database including copyrighted translations,
+use `setup:all` (its BibleGateway phase). The packaged installer **bundles**
+`data/rhema.db`, so this is only needed when building from source.
+
 ### Run in development
 
 ```bash
@@ -243,6 +257,7 @@ rhema/
 | `download:bible-data` | Download public domain Bible translations + cross-references |
 | `build:bible` | Build SQLite Bible database from JSON sources |
 | `build:hymns` | Import hymns into `rhema.db` from a JSON source (idempotent; does not touch Bible tables) |
+| `build:db` | Rebuild the database only — `download:bible-data` → `build:bible` → `build:hymns` (open-source Bible + hymns) |
 | `scrape:hymns` | Scrape hymns from the PCN parish source into a JSON file for `build:hymns` |
 | `download:model` | Export Qwen3-Embedding-0.6B to ONNX + quantize to INT8 |
 | `export:verses` | Export KJV verses to JSON for embedding precomputation |
